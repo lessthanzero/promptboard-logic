@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { usePromptBoardStore } from '../lib/store'
+import AssistantPanel from './AssistantPanel'
 
 const Sidebar: React.FC = () => {
   const { nodes, edges } = usePromptBoardStore()
@@ -52,13 +53,7 @@ const Sidebar: React.FC = () => {
             </pre>
           </div>
         ) : (
-          <div className="h-full">
-            <h3 className="text-sm font-medium text-gray-900 mb-3">AI Assistant</h3>
-            <div className="text-sm text-gray-500">
-              <p>No suggestions yet.</p>
-              <p className="mt-2">Edit nodes to see AI suggestions.</p>
-            </div>
-          </div>
+          <AssistantPanel />
         )}
       </div>
     </div>

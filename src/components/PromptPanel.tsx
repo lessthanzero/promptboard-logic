@@ -1,16 +1,13 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { usePromptBoardStore } from '../lib/store'
 
 const PromptPanel: React.FC = () => {
-  const { promptText, setPromptText, clearAll, loadMockData } = usePromptBoardStore()
-  const [isGenerating, setIsGenerating] = useState(false)
+  const { promptText, setPromptText, clearAll, loadMockData, generateLogic, isAnalyzing, syncToText } = usePromptBoardStore()
 
   const handleGenerate = async () => {
-    setIsGenerating(true)
-    // Simulate AI processing delay
-    setTimeout(() => {
-      setIsGenerating(false)
-    }, 1000)
+    if (promptText.trim()) {
+      await generateLogic(promptText.trim())
+    }
   }
 
   const handleSample = () => {
@@ -19,6 +16,10 @@ const PromptPanel: React.FC = () => {
 
   const handleClear = () => {
     clearAll()
+  }
+
+  const handleSync = async () => {
+    await syncToText()
   }
 
   return (
@@ -49,10 +50,10 @@ const PromptPanel: React.FC = () => {
       <div className="space-y-2">
         <button
           onClick={handleGenerate}
-          disabled={isGenerating || !promptText.trim()}
+          disabled={isAnalyzing || !promptText.trim()}
           className="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200"
         >
-          {isGenerating ? 'Generating...' : 'Generate Logic'}
+          {isAnalyzing ? 'Generating...' : 'Generate Logic'}
         </button>
         
         <div className="flex gap-2">
@@ -69,6 +70,13 @@ const PromptPanel: React.FC = () => {
             Clear
           </button>
         </div>
+        
+        <button
+          onClick={handleSync}
+          className="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200"
+        >
+          Sync to Text
+        </button>
       </div>
 
       {/* Hints Card */}

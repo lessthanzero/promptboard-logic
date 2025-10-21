@@ -1,5 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { Suggestion, NodeContext } from './ai'
+import { aiService } from './ai'
+import { exportToJSON, exportToMarkdown, exportToPDF, ExportData } from './export'
 
 export interface LogicNode {
   id: string
@@ -24,6 +27,11 @@ interface PromptBoardState {
   edges: LogicEdge[]
   promptText: string
   
+  // Assistant state
+  suggestions: Suggestion[]
+  isAnalyzing: boolean
+  lastUpdate: number
+  
   // Actions
   addNode: (node: LogicNode) => void
   updateNode: (id: string, updates: Partial<LogicNode>) => void
@@ -33,6 +41,18 @@ interface PromptBoardState {
   setPromptText: (text: string) => void
   clearAll: () => void
   loadMockData: () => void
+  
+  // AI actions
+  generateLogic: (prompt: string) => Promise<void>
+  getSuggestions: (nodeId: string) => Promise<void>
+  applySuggestion: (suggestionId: string) => void
+  dismissSuggestion: (suggestionId: string) => void
+  syncToText: () => Promise<void>
+  
+  // Export actions
+  exportJSON: () => void
+  exportMarkdown: () => void
+  exportPDF: () => void
 }
 
 const STORAGE_VERSION = "v2"
@@ -40,10 +60,15 @@ const STORAGE_KEY = `promptboard_state_${STORAGE_VERSION}`
 
 export const usePromptBoardStore = create<PromptBoardState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       nodes: [],
       edges: [],
       promptText: '',
+      
+      // Assistant state
+      suggestions: [],
+      isAnalyzing: false,
+      lastUpdate: 0,
       
       addNode: (node) => set((state) => ({
         nodes: [...state.nodes, node]
@@ -121,7 +146,106 @@ export const usePromptBoardStore = create<PromptBoardState>()(
           { id: 'e4', source: 'a2', target: 'o2' }
         ],
         promptText: 'If user skips onboarding, show tooltip reminder, else proceed to dashboard.'
-      })
+      }),
+      
+      // AI actions
+      generateLogic: async (prompt: string) => {
+        set({ isAnalyzing: true })
+        try {
+          const response = await aiService.parsePrompt(prompt)
+          set({ 
+            nodes: response.nodes,
+            edges: response.edges,
+            promptText: prompt,
+            isAnalyzing: false
+          })
+        } catch (error) {
+          console.error('AI generation failed:', error)
+          set({ isAnalyzing: false })
+        }
+      },
+      
+      getSuggestions: async (nodeId: string) => {
+        const state = get()
+        const node = state.nodes.find(n => n.id === nodeId)
+        if (!node) return
+        
+        const context: NodeContext = {
+          nodeId,
+          nodeType: node.type,
+          nodeLabel: node.label,
+          connectedNodes: state.edges
+            .filter(e => e.source === nodeId || e.target === nodeId)
+            .map(e => e.source === nodeId ? e.target : e.source),
+          graphSize: state.nodes.length
+        }
+        
+        try {
+          const suggestions = await aiService.getSuggestions(context)
+          set({ suggestions, lastUpdate: Date.now() })
+        } catch (error) {
+          console.error('Failed to get suggestions:', error)
+        }
+      },
+      
+      applySuggestion: (suggestionId: string) => {
+        const state = get()
+        const suggestion = state.suggestions.find(s => s.id === suggestionId)
+        if (!suggestion) return
+        
+        // Mock suggestion application
+        console.log('Applying suggestion:', suggestion.text)
+        
+        // Remove the applied suggestion
+        set({
+          suggestions: state.suggestions.filter(s => s.id !== suggestionId)
+        })
+      },
+      
+      dismissSuggestion: (suggestionId: string) => {
+        set({
+          suggestions: get().suggestions.filter(s => s.id !== suggestionId)
+        })
+      },
+      
+      syncToText: async () => {
+        const state = get()
+        try {
+          const summary = await aiService.summarizeGraph(state.nodes, state.edges)
+          set({ promptText: summary })
+        } catch (error) {
+          console.error('Failed to sync to text:', error)
+        }
+      },
+      
+      // Export actions
+      exportJSON: () => {
+        const state = get()
+        const exportData: ExportData = {
+          nodes: state.nodes,
+          edges: state.edges,
+          promptText: state.promptText,
+          timestamp: new Date().toISOString(),
+          version: STORAGE_VERSION
+        }
+        exportToJSON(exportData)
+      },
+      
+      exportMarkdown: () => {
+        const state = get()
+        const exportData: ExportData = {
+          nodes: state.nodes,
+          edges: state.edges,
+          promptText: state.promptText,
+          timestamp: new Date().toISOString(),
+          version: STORAGE_VERSION
+        }
+        exportToMarkdown(exportData)
+      },
+      
+      exportPDF: () => {
+        exportToPDF()
+      }
     }),
     {
       name: STORAGE_KEY,

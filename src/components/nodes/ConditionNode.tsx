@@ -1,12 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
 import { usePromptBoardStore } from '../../lib/store'
+import { useDebounce } from '../../hooks/useDebounce'
 
 const ConditionNode: React.FC<NodeProps> = ({ id, data }) => {
-  const { updateNode, deleteNode } = usePromptBoardStore()
+  const { updateNode, deleteNode, getSuggestions } = usePromptBoardStore()
   const [isEditing, setIsEditing] = useState(false)
   const [tempLabel, setTempLabel] = useState(data.label || '')
   const inputRef = useRef<HTMLInputElement>(null)
+  
+  // Debounce label changes for AI suggestions
+  const debouncedLabel = useDebounce(data.label, 1000)
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -14,6 +18,13 @@ const ConditionNode: React.FC<NodeProps> = ({ id, data }) => {
       inputRef.current.select()
     }
   }, [isEditing])
+
+  // Trigger AI suggestions when label changes (debounced)
+  useEffect(() => {
+    if (debouncedLabel && debouncedLabel !== data.label) {
+      getSuggestions(id)
+    }
+  }, [debouncedLabel, id, getSuggestions, data.label])
 
   const handleDoubleClick = () => {
     setIsEditing(true)
