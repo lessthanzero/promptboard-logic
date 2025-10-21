@@ -5,7 +5,10 @@ export interface LogicNode {
   id: string
   type: 'condition' | 'action' | 'outcome'
   label: string
-  position?: { x: number; y: number }
+  position: { x: number; y: number }
+  data: {
+    label: string
+  }
 }
 
 export interface LogicEdge {
@@ -13,6 +16,7 @@ export interface LogicEdge {
   source: string
   target: string
   label?: string
+  type?: string
 }
 
 interface PromptBoardState {
@@ -28,6 +32,7 @@ interface PromptBoardState {
   deleteEdge: (id: string) => void
   setPromptText: (text: string) => void
   clearAll: () => void
+  loadMockData: () => void
 }
 
 const STORAGE_VERSION = "v2"
@@ -46,7 +51,11 @@ export const usePromptBoardStore = create<PromptBoardState>()(
       
       updateNode: (id, updates) => set((state) => ({
         nodes: state.nodes.map(node => 
-          node.id === id ? { ...node, ...updates } : node
+          node.id === id ? { 
+            ...node, 
+            ...updates,
+            data: { ...node.data, ...(updates.label ? { label: updates.label } : {}) }
+          } : node
         )
       })),
       
@@ -65,7 +74,54 @@ export const usePromptBoardStore = create<PromptBoardState>()(
       
       setPromptText: (text) => set({ promptText: text }),
       
-      clearAll: () => set({ nodes: [], edges: [], promptText: '' })
+      clearAll: () => set({ nodes: [], edges: [], promptText: '' }),
+      
+      loadMockData: () => set({
+        nodes: [
+          {
+            id: 'c1',
+            type: 'condition',
+            label: 'User skips onboarding?',
+            position: { x: 100, y: 100 },
+            data: { label: 'User skips onboarding?' }
+          },
+          {
+            id: 'a1',
+            type: 'action',
+            label: 'Show tooltip reminder',
+            position: { x: 50, y: 200 },
+            data: { label: 'Show tooltip reminder' }
+          },
+          {
+            id: 'a2',
+            type: 'action',
+            label: 'Proceed to dashboard',
+            position: { x: 150, y: 200 },
+            data: { label: 'Proceed to dashboard' }
+          },
+          {
+            id: 'o1',
+            type: 'outcome',
+            label: 'Reduced confusion',
+            position: { x: 50, y: 300 },
+            data: { label: 'Reduced confusion' }
+          },
+          {
+            id: 'o2',
+            type: 'outcome',
+            label: 'Normal flow',
+            position: { x: 150, y: 300 },
+            data: { label: 'Normal flow' }
+          }
+        ],
+        edges: [
+          { id: 'e1', source: 'c1', target: 'a1', label: 'yes' },
+          { id: 'e2', source: 'c1', target: 'a2', label: 'no' },
+          { id: 'e3', source: 'a1', target: 'o1' },
+          { id: 'e4', source: 'a2', target: 'o2' }
+        ],
+        promptText: 'If user skips onboarding, show tooltip reminder, else proceed to dashboard.'
+      })
     }),
     {
       name: STORAGE_KEY,
