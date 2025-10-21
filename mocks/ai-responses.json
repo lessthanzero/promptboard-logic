@@ -54,6 +54,49 @@
         { "id": "e3", "source": "a1", "target": "o1" },
         { "id": "e4", "source": "a2", "target": "o2" }
       ]
+    },
+    {
+      "id": "job-salary-decision",
+      "prompt": "If I find a new job with salary >$80k, I stay in current city, else I need to move to a new location.",
+      "nodes": [
+        { "id": "c1", "type": "condition", "label": "New job salary >$80k?", "position": { "x": 100, "y": 100 } },
+        { "id": "a1", "type": "action", "label": "Stay in current city", "position": { "x": 50, "y": 200 } },
+        { "id": "a2", "type": "action", "label": "Move to new location", "position": { "x": 150, "y": 200 } },
+        { "id": "o1", "type": "outcome", "label": "Stable life, current friends", "position": { "x": 50, "y": 300 } },
+        { "id": "o2", "type": "outcome", "label": "New start, new opportunities", "position": { "x": 150, "y": 300 } },
+        { "id": "c2", "type": "condition", "label": "Consider cost of living?", "position": { "x": 150, "y": 400 } },
+        { "id": "a3", "type": "action", "label": "Research new city costs", "position": { "x": 150, "y": 500 } },
+        { "id": "o3", "type": "outcome", "label": "Informed decision", "position": { "x": 150, "y": 600 } }
+      ],
+      "edges": [
+        { "id": "e1", "source": "c1", "target": "a1", "label": "yes" },
+        { "id": "e2", "source": "c1", "target": "a2", "label": "no" },
+        { "id": "e3", "source": "a1", "target": "o1" },
+        { "id": "e4", "source": "a2", "target": "o2" },
+        { "id": "e5", "source": "a2", "target": "c2" },
+        { "id": "e6", "source": "c2", "target": "a3", "label": "yes" },
+        { "id": "e7", "source": "a3", "target": "o3" }
+      ],
+      "executionInputs": {
+        "salary": {
+          "type": "slider",
+          "min": 50000,
+          "max": 120000,
+          "step": 5000,
+          "default": 80000,
+          "label": "Expected Salary"
+        },
+        "currentCity": {
+          "type": "text",
+          "default": "San Francisco",
+          "label": "Current City"
+        },
+        "newCity": {
+          "type": "text",
+          "default": "Austin",
+          "label": "Potential New City"
+        }
+      }
     }
   ],
   "assistantSuggestions": [

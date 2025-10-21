@@ -18,11 +18,13 @@
 - [x] Create /mocks/ai-responses.json (Deterministic mock data)
 - [x] Document localStorage version migration strategy
 
-### Day 3 - Design, Wireframes & Component Architecture
-- [ ] Create /docs/wireframes.md (ASCII layouts for 3 states)
-- [ ] Create /docs/component-architecture.md (Component hierarchy)
-- [ ] Define Tailwind design tokens for node types
-- [ ] Specify error states and loading indicators
+### Day 3 - Design, Wireframes & Component Architecture ✅
+- [x] Create /docs/wireframes.md (Real data wireframes for 5 states)
+- [x] Create /docs/component-architecture.md (Persona-aware component hierarchy)
+- [x] Create /docs/design-tokens.md (Comprehensive style guide)
+- [x] Create /docs/error-states.md (Specific error scenarios)
+- [x] Add non-PM/Researcher mock scenario (job salary decision)
+- [x] Design executable wireframes concept for future implementation
 
 ### Day 4 - React Flow Canvas & Core Nodes
 - [ ] Implement Zustand store with localStorage persistence
