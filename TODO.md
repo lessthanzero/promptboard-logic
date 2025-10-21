@@ -47,26 +47,26 @@
 ## 🎨 UI/UX Improvements - Post-MVP
 
 ### Phase 1: Immediate Polish (Week 1)
-- [ ] **Dark Mode Toggle**
-  - [ ] Theme context provider
-  - [ ] CSS variables for light/dark themes
-  - [ ] Toggle button in header
-  - [ ] Persist user preference in localStorage
-- [ ] **Enhanced Button States**
-  - [ ] Hover animations (scale 1.05x, shadow elevation)
+- [x] **Dark Mode Toggle**
+  - [x] Theme context provider
+  - [x] CSS variables for light/dark themes
+  - [x] Toggle button in header
+  - [x] Persist user preference in localStorage
+- [x] **Enhanced Button States**
+  - [x] Hover animations (scale 1.05x, shadow elevation)
   - [ ] Loading spinners with progress indicators
-  - [ ] Success/error toasts with auto-dismiss
-  - [ ] Button press animations (scale down 0.95x)
-- [ ] **Improved Error Handling**
-  - [ ] Toast notification system
+  - [x] Success/error toasts with auto-dismiss
+  - [x] Button press animations (scale down 0.95x)
+- [x] **Improved Error Handling**
+  - [x] Toast notification system
   - [ ] Error boundary improvements
-  - [ ] User-friendly error messages
+  - [x] User-friendly error messages
   - [ ] Recovery suggestions
-- [ ] **Keyboard Shortcuts**
-  - [ ] Cmd/Ctrl + K for command palette
+- [x] **Keyboard Shortcuts**
+  - [x] Cmd/Ctrl + K for command palette
   - [ ] Cmd/Ctrl + Z/Y for undo/redo
-  - [ ] Cmd/Ctrl + S for save
-  - [ ] Escape to close modals
+  - [x] Cmd/Ctrl + S for save
+  - [x] Escape to close modals
 - [ ] **Resizable Panels**
   - [ ] Drag handles for panel resizing
   - [ ] Minimum/maximum width constraints

@@ -1,25 +1,39 @@
 import React from 'react'
 import { usePromptBoardStore } from '../lib/store'
+import { useToastContext } from '../contexts/ToastContext'
 
 const PromptPanel: React.FC = () => {
   const { promptText, setPromptText, clearAll, loadMockData, generateLogic, isAnalyzing, syncToText } = usePromptBoardStore()
+  const { showSuccess, showError } = useToastContext()
 
   const handleGenerate = async () => {
     if (promptText.trim()) {
-      await generateLogic(promptText.trim())
+      try {
+        await generateLogic(promptText.trim())
+        showSuccess('Logic Generated!', 'Your logic graph has been created successfully.')
+      } catch (error) {
+        showError('Generation Failed', 'Failed to generate logic. Please try again.')
+      }
     }
   }
 
   const handleSample = () => {
     loadMockData()
+    showSuccess('Sample Loaded!', 'Mock data has been loaded successfully.')
   }
 
   const handleClear = () => {
     clearAll()
+    showSuccess('Canvas Cleared!', 'All nodes and edges have been removed.')
   }
 
   const handleSync = async () => {
-    await syncToText()
+    try {
+      await syncToText()
+      showSuccess('Synced to Text!', 'Graph has been converted to text format.')
+    } catch (error) {
+      showError('Sync Failed', 'Failed to sync graph to text.')
+    }
   }
 
   return (
@@ -51,7 +65,7 @@ const PromptPanel: React.FC = () => {
         <button
           onClick={handleGenerate}
           disabled={isAnalyzing || !promptText.trim()}
-          className="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200"
+          className="w-full btn-primary"
         >
           {isAnalyzing ? 'Generating...' : 'Generate Logic'}
         </button>
@@ -59,13 +73,13 @@ const PromptPanel: React.FC = () => {
         <div className="flex gap-2">
           <button
             onClick={handleSample}
-            className="flex-1 bg-gray-100 text-gray-900 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+            className="flex-1 btn-secondary"
           >
             Sample
           </button>
           <button
             onClick={handleClear}
-            className="flex-1 bg-red-100 text-red-900 px-4 py-2 rounded-lg hover:bg-red-200 transition-colors duration-200"
+            className="flex-1 btn-danger"
           >
             Clear
           </button>
@@ -73,7 +87,7 @@ const PromptPanel: React.FC = () => {
         
         <button
           onClick={handleSync}
-          className="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200"
+          className="w-full btn-success"
         >
           Sync to Text
         </button>

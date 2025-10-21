@@ -159,9 +159,11 @@ export const usePromptBoardStore = create<PromptBoardState>()(
             promptText: prompt,
             isAnalyzing: false
           })
+          // Success will be handled by components using the toast context
         } catch (error) {
           console.error('AI generation failed:', error)
           set({ isAnalyzing: false })
+          // Error will be handled by components using the toast context
         }
       },
       

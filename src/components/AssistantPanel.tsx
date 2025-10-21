@@ -52,13 +52,13 @@ const AssistantPanel: React.FC = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={() => applySuggestion(suggestion.id)}
-                    className="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 transition-colors duration-200"
+                    className="btn-primary text-xs px-3 py-1"
                   >
                     Apply
                   </button>
                   <button
                     onClick={() => dismissSuggestion(suggestion.id)}
-                    className="bg-gray-100 text-gray-700 px-3 py-1 rounded text-xs hover:bg-gray-200 transition-colors duration-200"
+                    className="btn-secondary text-xs px-3 py-1"
                   >
                     Dismiss
                   </button>
