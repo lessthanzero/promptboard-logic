@@ -67,6 +67,16 @@
   - [ ] Cmd/Ctrl + Z/Y for undo/redo
   - [x] Cmd/Ctrl + S for save
   - [x] Escape to close modals
+- [x] **UI Layout & Typography Updates**
+  - [x] Replace fonts with Inter (UI) and JetBrains Mono (code)
+  - [x] Remove gray outlines from all buttons
+  - [x] Add 8px gaps between buttons
+  - [x] Fix panel widths (1/4 each side, 2/4 center)
+  - [x] Fix vertical overflow for panels
+  - [x] Move hints below text area
+  - [x] Add copy icon to JSON view
+  - [x] Ensure 44px minimum touch targets
+  - [x] Remove unused small gray buttons
 - [ ] **Resizable Panels**
   - [ ] Drag handles for panel resizing
   - [ ] Minimum/maximum width constraints

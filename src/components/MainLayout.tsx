@@ -11,19 +11,19 @@ const MainLayout: React.FC = () => {
       <Header />
       
       {/* Main Content */}
-      <div className="flex-1 grid grid-cols-3">
-        {/* Left Panel - Prompt Input */}
-        <div className="min-w-[320px] border-r border-gray-200 bg-white">
+      <div className="flex-1 grid grid-cols-4">
+        {/* Left Panel - Prompt Input (1/4 width) */}
+        <div className="min-h-screen border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto">
           <PromptPanel />
         </div>
         
-        {/* Center Panel - Canvas */}
-        <div className="flex-1 bg-gray-50">
+        {/* Center Panel - Canvas (2/4 width) */}
+        <div className="col-span-2 bg-gray-50 dark:bg-gray-900 min-h-screen">
           <CanvasArea />
         </div>
         
-        {/* Right Panel - Sidebar */}
-        <div className="min-w-[320px] border-l border-gray-200 bg-white">
+        {/* Right Panel - Sidebar (1/4 width) */}
+        <div className="min-h-screen border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto">
           <Sidebar />
         </div>
       </div>
