@@ -10,13 +10,13 @@
 - [x] Create pages/Canvas.tsx with empty React Flow canvas
 - [x] Deploy to Vercel and test live preview
 
-### Day 2 - Personas, Scope & Mock Data Definition
-- [ ] Create /docs/personas/pm.md (Maya Patel - Product Manager)
-- [ ] Create /docs/personas/researcher.md (Dr. Leo Chen - Researcher/Strategist)
-- [ ] Create /docs/ai_feedback.md (Reasoning Loop concept)
-- [ ] Create /docs/mvp_scope.md (Feature priority matrix)
-- [ ] Create /mocks/ai-responses.json (Deterministic mock data)
-- [ ] Document localStorage version migration strategy
+### Day 2 - Personas, Scope & Mock Data Definition ✅
+- [x] Create /docs/personas/pm.md (Maya Patel - Product Manager)
+- [x] Create /docs/personas/researcher.md (Dr. Leo Chen - Researcher/Strategist)
+- [x] Create /docs/ai_feedback.md (Reasoning Loop concept)
+- [x] Create /docs/mvp_scope.md (Feature priority matrix)
+- [x] Create /mocks/ai-responses.json (Deterministic mock data)
+- [x] Document localStorage version migration strategy
 
 ### Day 3 - Design, Wireframes & Component Architecture
 - [ ] Create /docs/wireframes.md (ASCII layouts for 3 states)

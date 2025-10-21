@@ -1,0 +1,152 @@
+{
+  "samplePrompts": [
+    {
+      "id": "onboarding-skip",
+      "prompt": "If user skips onboarding, show tooltip reminder, else proceed to dashboard.",
+      "nodes": [
+        { "id": "c1", "type": "condition", "label": "User skips onboarding?", "position": { "x": 100, "y": 100 } },
+        { "id": "a1", "type": "action", "label": "Show tooltip reminder", "position": { "x": 50, "y": 200 } },
+        { "id": "a2", "type": "action", "label": "Proceed to dashboard", "position": { "x": 150, "y": 200 } },
+        { "id": "o1", "type": "outcome", "label": "Reduced confusion", "position": { "x": 50, "y": 300 } },
+        { "id": "o2", "type": "outcome", "label": "Normal flow", "position": { "x": 150, "y": 300 } }
+      ],
+      "edges": [
+        { "id": "e1", "source": "c1", "target": "a1", "label": "yes" },
+        { "id": "e2", "source": "c1", "target": "a2", "label": "no" },
+        { "id": "e3", "source": "a1", "target": "o1" },
+        { "id": "e4", "source": "a2", "target": "o2" }
+      ]
+    },
+    {
+      "id": "pricing-strategy",
+      "prompt": "If we increase price by 20%, churn may rise but revenue increases. If churn rises too much, we need to add value.",
+      "nodes": [
+        { "id": "c1", "type": "condition", "label": "Price increase 20%?", "position": { "x": 100, "y": 100 } },
+        { "id": "a1", "type": "action", "label": "Implement price increase", "position": { "x": 50, "y": 200 } },
+        { "id": "o1", "type": "outcome", "label": "Churn rises", "position": { "x": 50, "y": 300 } },
+        { "id": "o2", "type": "outcome", "label": "Revenue increases", "position": { "x": 150, "y": 300 } },
+        { "id": "c2", "type": "condition", "label": "Churn too high?", "position": { "x": 50, "y": 400 } },
+        { "id": "a2", "type": "action", "label": "Add value features", "position": { "x": 50, "y": 500 } },
+        { "id": "o3", "type": "outcome", "label": "Stabilized churn", "position": { "x": 50, "y": 600 } }
+      ],
+      "edges": [
+        { "id": "e1", "source": "c1", "target": "a1", "label": "yes" },
+        { "id": "e2", "source": "a1", "target": "o1" },
+        { "id": "e3", "source": "a1", "target": "o2" },
+        { "id": "e4", "source": "o1", "target": "c2" },
+        { "id": "e5", "source": "c2", "target": "a2", "label": "yes" },
+        { "id": "e6", "source": "a2", "target": "o3" }
+      ]
+    },
+    {
+      "id": "feature-rollout",
+      "prompt": "If A/B test shows 20% improvement, roll out globally. If not, iterate and retest.",
+      "nodes": [
+        { "id": "c1", "type": "condition", "label": "A/B test shows 20% improvement?", "position": { "x": 100, "y": 100 } },
+        { "id": "a1", "type": "action", "label": "Roll out globally", "position": { "x": 50, "y": 200 } },
+        { "id": "a2", "type": "action", "label": "Iterate and retest", "position": { "x": 150, "y": 200 } },
+        { "id": "o1", "type": "outcome", "label": "Global success", "position": { "x": 50, "y": 300 } },
+        { "id": "o2", "type": "outcome", "label": "Continued testing", "position": { "x": 150, "y": 300 } }
+      ],
+      "edges": [
+        { "id": "e1", "source": "c1", "target": "a1", "label": "yes" },
+        { "id": "e2", "source": "c1", "target": "a2", "label": "no" },
+        { "id": "e3", "source": "a1", "target": "o1" },
+        { "id": "e4", "source": "a2", "target": "o2" }
+      ]
+    }
+  ],
+  "assistantSuggestions": [
+    {
+      "id": "simplify-branch",
+      "text": "Simplify this branch?",
+      "action": "merge",
+      "icon": "merge",
+      "confidence": 0.8,
+      "triggers": ["node_rename", "multiple_conditions"],
+      "description": "Merge similar conditions or actions to reduce complexity"
+    },
+    {
+      "id": "add-outcome",
+      "text": "Add missing outcome?",
+      "action": "create",
+      "icon": "plus",
+      "confidence": 0.9,
+      "triggers": ["new_action", "orphaned_action"],
+      "description": "Create outcome node for actions that don't lead anywhere"
+    },
+    {
+      "id": "rename-clarity",
+      "text": "Rename improves clarity?",
+      "action": "acknowledge",
+      "icon": "check",
+      "confidence": 0.7,
+      "triggers": ["node_rename"],
+      "description": "Acknowledge when user improves node labels"
+    },
+    {
+      "id": "add-edge-case",
+      "text": "Consider edge case?",
+      "action": "suggest",
+      "icon": "lightbulb",
+      "confidence": 0.6,
+      "triggers": ["simple_condition"],
+      "description": "Suggest additional conditions for edge cases"
+    },
+    {
+      "id": "reverse-relationship",
+      "text": "Add reverse relationship?",
+      "action": "create",
+      "icon": "arrow-left-right",
+      "confidence": 0.5,
+      "triggers": ["one_way_edge"],
+      "description": "Consider if the relationship works both ways"
+    }
+  ],
+  "errorStates": {
+    "parsing_failed": {
+      "title": "Could not parse prompt",
+      "message": "Please try rephrasing your logic in simpler terms",
+      "suggestions": [
+        "Use 'if...then...' statements",
+        "Keep it to 2-3 sentences",
+        "Avoid complex nested conditions"
+      ]
+    },
+    "network_error": {
+      "title": "Connection failed",
+      "message": "Unable to process your request",
+      "suggestions": [
+        "Check your internet connection",
+        "Try again in a moment",
+        "Use the sample prompts to get started"
+      ]
+    },
+    "storage_full": {
+      "title": "Storage limit reached",
+      "message": "Cannot save your changes",
+      "suggestions": [
+        "Clear browser data",
+        "Export your logic and start fresh",
+        "Contact support if this persists"
+      ]
+    }
+  },
+  "loadingStates": {
+    "parsing": {
+      "title": "Analyzing your logic...",
+      "message": "Converting text to visual diagram",
+      "duration": 500
+    },
+    "saving": {
+      "title": "Saving changes...",
+      "message": "Storing your logic",
+      "duration": 200
+    },
+    "exporting": {
+      "title": "Preparing export...",
+      "message": "Generating your file",
+      "duration": 300
+    }
+  }
+}
