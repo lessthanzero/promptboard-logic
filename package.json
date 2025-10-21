@@ -1,0 +1,40 @@
+{
+  "name": "promptboard",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+  },
+  "keywords": [
+    "ai",
+    "logic",
+    "reasoning",
+    "canvas"
+  ],
+  "author": "",
+  "license": "ISC",
+  "description": "AI Logic Board - A reasoning canvas that transforms natural-language descriptions into interactive decision systems",
+  "dependencies": {
+    "@radix-ui/react-icons": "^1.3.2",
+    "@tailwindcss/postcss": "^4.1.15",
+    "@tailwindcss/typography": "^0.5.19",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.4.21",
+    "axios": "^1.12.2",
+    "postcss": "^8.5.6",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "reactflow": "^11.11.4",
+    "tailwindcss": "^4.1.15",
+    "typescript": "^5.9.3",
+    "uuid": "^13.0.0",
+    "vite": "^6.4.1",
+    "zustand": "^5.0.8"
+  }
+}
