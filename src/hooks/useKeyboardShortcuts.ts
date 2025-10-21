@@ -11,7 +11,11 @@ export const useKeyboardShortcuts = () => {
     syncToText,
     exportJSON,
     exportMarkdown,
-    exportPDF
+    exportPDF,
+    undo,
+    redo,
+    canUndo,
+    canRedo
   } = usePromptBoardStore()
   
   const { showSuccess, showInfo } = useToastContext()
@@ -67,6 +71,25 @@ export const useKeyboardShortcuts = () => {
         showSuccess('Synced!', 'Graph converted to text')
       }
 
+      // Cmd/Ctrl + Z - Undo
+      if ((event.metaKey || event.ctrlKey) && event.key === 'z' && !event.shiftKey) {
+        event.preventDefault()
+        if (canUndo()) {
+          undo()
+          showSuccess('Undone!', 'Previous action undone')
+        }
+      }
+
+      // Cmd/Ctrl + Shift + Z or Cmd/Ctrl + Y - Redo
+      if (((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === 'Z') || 
+          ((event.metaKey || event.ctrlKey) && event.key === 'y')) {
+        event.preventDefault()
+        if (canRedo()) {
+          redo()
+          showSuccess('Redone!', 'Action redone')
+        }
+      }
+
       // Cmd/Ctrl + Delete - Clear All
       if ((event.metaKey || event.ctrlKey) && event.key === 'Delete') {
         event.preventDefault()
@@ -92,6 +115,10 @@ export const useKeyboardShortcuts = () => {
     exportJSON,
     exportMarkdown,
     exportPDF,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
     showSuccess,
     showInfo
   ])

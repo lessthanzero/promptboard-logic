@@ -75,7 +75,7 @@ const PromptPanel: React.FC = () => {
         <button
           onClick={handleGenerate}
           disabled={isAnalyzing || !promptText.trim()}
-          className="w-full btn-primary"
+          className={`w-full btn-primary ${isAnalyzing ? 'btn-loading' : ''}`}
         >
           {isAnalyzing ? 'Generating...' : 'Generate Logic'}
         </button>

@@ -26,12 +26,16 @@ interface PromptBoardState {
   nodes: LogicNode[]
   edges: LogicEdge[]
   promptText: string
-  
+
   // Assistant state
   suggestions: Suggestion[]
   isAnalyzing: boolean
   lastUpdate: number
-  
+
+  // Undo/Redo state
+  history: Array<{ nodes: LogicNode[]; edges: LogicEdge[]; promptText: string }>
+  historyIndex: number
+
   // Actions
   addNode: (node: LogicNode) => void
   updateNode: (id: string, updates: Partial<LogicNode>) => void
@@ -41,14 +45,20 @@ interface PromptBoardState {
   setPromptText: (text: string) => void
   clearAll: () => void
   loadMockData: () => void
-  
+
+  // Undo/Redo actions
+  undo: () => void
+  redo: () => void
+  canUndo: () => boolean
+  canRedo: () => boolean
+
   // AI actions
   generateLogic: (prompt: string) => Promise<void>
   getSuggestions: (nodeId: string) => Promise<void>
   applySuggestion: (suggestionId: string) => void
   dismissSuggestion: (suggestionId: string) => void
   syncToText: () => Promise<void>
-  
+
   // Export actions
   exportJSON: () => void
   exportMarkdown: () => void
@@ -60,15 +70,19 @@ const STORAGE_KEY = `promptboard_state_${STORAGE_VERSION}`
 
 export const usePromptBoardStore = create<PromptBoardState>()(
   persist(
-    (set, get) => ({
-      nodes: [],
-      edges: [],
-      promptText: '',
-      
-      // Assistant state
-      suggestions: [],
-      isAnalyzing: false,
-      lastUpdate: 0,
+        (set, get) => ({
+          nodes: [],
+          edges: [],
+          promptText: '',
+
+          // Assistant state
+          suggestions: [],
+          isAnalyzing: false,
+          lastUpdate: 0,
+
+          // Undo/Redo state
+          history: [{ nodes: [], edges: [], promptText: '' }],
+          historyIndex: 0,
       
       addNode: (node) => set((state) => ({
         nodes: [...state.nodes, node]
@@ -99,54 +113,108 @@ export const usePromptBoardStore = create<PromptBoardState>()(
       
       setPromptText: (text) => set({ promptText: text }),
       
-      clearAll: () => set({ nodes: [], edges: [], promptText: '' }),
-      
-      loadMockData: () => set({
-        nodes: [
-          {
-            id: 'c1',
-            type: 'condition',
-            label: 'User skips onboarding?',
-            position: { x: 100, y: 100 },
-            data: { label: 'User skips onboarding?' }
+          clearAll: () => {
+            const state = get()
+            const newState = { nodes: [], edges: [], promptText: '' }
+            set({
+              ...newState,
+              history: [...state.history.slice(0, state.historyIndex + 1), newState],
+              historyIndex: state.historyIndex + 1
+            })
           },
-          {
-            id: 'a1',
-            type: 'action',
-            label: 'Show tooltip reminder',
-            position: { x: 50, y: 200 },
-            data: { label: 'Show tooltip reminder' }
+
+          loadMockData: () => {
+            const state = get()
+            const newState = {
+              nodes: [
+                {
+                  id: 'c1',
+                  type: 'condition' as const,
+                  label: 'User skips onboarding?',
+                  position: { x: 100, y: 100 },
+                  data: { label: 'User skips onboarding?' }
+                },
+                {
+                  id: 'a1',
+                  type: 'action' as const,
+                  label: 'Show tooltip reminder',
+                  position: { x: 50, y: 200 },
+                  data: { label: 'Show tooltip reminder' }
+                },
+                {
+                  id: 'a2',
+                  type: 'action' as const,
+                  label: 'Proceed to dashboard',
+                  position: { x: 150, y: 200 },
+                  data: { label: 'Proceed to dashboard' }
+                },
+                {
+                  id: 'o1',
+                  type: 'outcome' as const,
+                  label: 'Reduced confusion',
+                  position: { x: 50, y: 300 },
+                  data: { label: 'Reduced confusion' }
+                },
+                {
+                  id: 'o2',
+                  type: 'outcome' as const,
+                  label: 'Normal flow',
+                  position: { x: 150, y: 300 },
+                  data: { label: 'Normal flow' }
+                }
+              ],
+              edges: [
+                { id: 'e1', source: 'c1', target: 'a1', label: 'yes' },
+                { id: 'e2', source: 'c1', target: 'a2', label: 'no' },
+                { id: 'e3', source: 'a1', target: 'o1' },
+                { id: 'e4', source: 'a2', target: 'o2' }
+              ],
+              promptText: 'If user skips onboarding, show tooltip reminder, else proceed to dashboard.'
+            }
+            set({
+              ...newState,
+              history: [...state.history.slice(0, state.historyIndex + 1), newState],
+              historyIndex: state.historyIndex + 1
+            })
           },
-          {
-            id: 'a2',
-            type: 'action',
-            label: 'Proceed to dashboard',
-            position: { x: 150, y: 200 },
-            data: { label: 'Proceed to dashboard' }
+
+          // Undo/Redo actions
+          undo: () => {
+            const state = get()
+            if (state.historyIndex > 0) {
+              const previousState = state.history[state.historyIndex - 1]
+              set({
+                nodes: previousState.nodes,
+                edges: previousState.edges,
+                promptText: previousState.promptText,
+                historyIndex: state.historyIndex - 1
+              })
+            }
           },
-          {
-            id: 'o1',
-            type: 'outcome',
-            label: 'Reduced confusion',
-            position: { x: 50, y: 300 },
-            data: { label: 'Reduced confusion' }
+
+          redo: () => {
+            const state = get()
+            if (state.historyIndex < state.history.length - 1) {
+              const nextState = state.history[state.historyIndex + 1]
+              set({
+                nodes: nextState.nodes,
+                edges: nextState.edges,
+                promptText: nextState.promptText,
+                historyIndex: state.historyIndex + 1
+              })
+            }
           },
-          {
-            id: 'o2',
-            type: 'outcome',
-            label: 'Normal flow',
-            position: { x: 150, y: 300 },
-            data: { label: 'Normal flow' }
-          }
-        ],
-        edges: [
-          { id: 'e1', source: 'c1', target: 'a1', label: 'yes' },
-          { id: 'e2', source: 'c1', target: 'a2', label: 'no' },
-          { id: 'e3', source: 'a1', target: 'o1' },
-          { id: 'e4', source: 'a2', target: 'o2' }
-        ],
-        promptText: 'If user skips onboarding, show tooltip reminder, else proceed to dashboard.'
-      }),
+
+          canUndo: () => {
+            const state = get()
+            return state.historyIndex > 0
+          },
+
+          canRedo: () => {
+            const state = get()
+            return state.historyIndex < state.history.length - 1
+          },
+
       
       // AI actions
       generateLogic: async (prompt: string) => {

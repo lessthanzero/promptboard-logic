@@ -54,17 +54,17 @@
   - [x] Persist user preference in localStorage
 - [x] **Enhanced Button States**
   - [x] Hover animations (scale 1.05x, shadow elevation)
-  - [ ] Loading spinners with progress indicators
+  - [x] Loading spinners with progress indicators
   - [x] Success/error toasts with auto-dismiss
   - [x] Button press animations (scale down 0.95x)
 - [x] **Improved Error Handling**
   - [x] Toast notification system
-  - [ ] Error boundary improvements
+  - [x] Error boundary improvements
   - [x] User-friendly error messages
-  - [ ] Recovery suggestions
+  - [x] Recovery suggestions
 - [x] **Keyboard Shortcuts**
   - [x] Cmd/Ctrl + K for command palette
-  - [ ] Cmd/Ctrl + Z/Y for undo/redo
+  - [x] Cmd/Ctrl + Z/Y for undo/redo
   - [x] Cmd/Ctrl + S for save
   - [x] Escape to close modals
 - [x] **UI Layout & Typography Updates**
@@ -77,11 +77,11 @@
   - [x] Add copy icon to JSON view
   - [x] Ensure 44px minimum touch targets
   - [x] Remove unused small gray buttons
-- [ ] **Resizable Panels**
-  - [ ] Drag handles for panel resizing
-  - [ ] Minimum/maximum width constraints
-  - [ ] Persist panel sizes in localStorage
-  - [ ] Smooth resize animations
+- [x] **Resizable Panels**
+  - [x] Drag handles for panel resizing
+  - [x] Minimum/maximum width constraints
+  - [x] Persist panel sizes in localStorage
+  - [x] Smooth resize animations
 
 ### Phase 2: Advanced Interactions (Week 2-3)
 - [ ] **Interactive Tutorial**
