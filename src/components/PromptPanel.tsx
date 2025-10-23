@@ -1,10 +1,17 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { usePromptBoardStore } from '../lib/store'
 import { useToastContext } from '../contexts/ToastContext'
+import { Button } from './ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
+import { Textarea } from './ui/textarea'
+import { Sparkles, TestTube, RefreshCw, Trash2, Key } from 'lucide-react'
+import ApiDialog from './ApiDialog'
 
 const PromptPanel: React.FC = () => {
   const { promptText, setPromptText, clearAll, loadMockData, generateLogic, isAnalyzing, syncToText } = usePromptBoardStore()
   const { showSuccess, showError } = useToastContext()
+  const [apiDialogOpen, setApiDialogOpen] = useState(false)
 
   const handleGenerate = async () => {
     if (promptText.trim()) {
@@ -37,72 +44,82 @@ const PromptPanel: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col p-4 space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Described Logic</h2>
-        <div className="flex items-center gap-2">
-          <select className="text-sm border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white min-h-[44px]">
-            <option value="pm">PM</option>
-            <option value="researcher">Researcher</option>
-            <option value="custom">Custom...</option>
-          </select>
+    <Card className="h-full rounded-none border-0 border-r">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg">Preset</CardTitle>
+        <Select defaultValue="PM">
+          <SelectTrigger className="w-full mt-2">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="PM">PM</SelectItem>
+            <SelectItem value="Developer">Developer</SelectItem>
+            <SelectItem value="Designer">Designer</SelectItem>
+            <SelectItem value="CxO">CxO</SelectItem>
+          </SelectContent>
+        </Select>
+      </CardHeader>
+      <CardContent className="flex-1 flex flex-col gap-3">
+        <div className="space-y-2 flex-1">
+          <h3 className="text-lg">Logic summary</h3>
+          <Textarea
+            value={promptText}
+            onChange={(e) => setPromptText(e.target.value)}
+            placeholder="Describe your logic here..."
+            className="min-h-[200px] resize-none"
+          />
         </div>
-      </div>
-
-      {/* Prompt Input */}
-      <div className="flex-1 min-h-0">
-        <textarea
-          value={promptText}
-          onChange={(e) => setPromptText(e.target.value)}
-          placeholder="If user skips onboarding, then show tooltip reminder, else proceed to dashboard..."
-          className="w-full h-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:ring-2 focus:ring-blue-300 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-        />
-      </div>
-
-      {/* Hints Card - Moved below text area */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-        <h3 className="text-xs font-medium text-blue-900 dark:text-blue-100 mb-2">Hints</h3>
-        <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
-          <li>• Keep it short (2–3 sentences)</li>
-          <li>• Use "if… then…" statements</li>
-          <li>• Be specific about conditions and outcomes</li>
-        </ul>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="btn-group-vertical">
-        <button
-          onClick={handleGenerate}
-          disabled={isAnalyzing || !promptText.trim()}
-          className={`w-full btn-primary ${isAnalyzing ? 'btn-loading' : ''}`}
-        >
-          {isAnalyzing ? 'Generating...' : 'Generate Logic'}
-        </button>
-        
-        <div className="btn-group">
-          <button
+        <div className="flex flex-col gap-2">
+          <Button 
+            variant="default" 
+            size="sm" 
+            className="w-full justify-start"
+            onClick={handleGenerate}
+            disabled={isAnalyzing || !promptText.trim()}
+          >
+            <Sparkles className="w-4 h-4 mr-2" />
+            Generate logic
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full justify-start"
             onClick={handleSample}
-            className="flex-1 btn-secondary"
           >
+            <TestTube className="w-4 h-4 mr-2" />
             Sample
-          </button>
-          <button
-            onClick={handleClear}
-            className="flex-1 btn-danger"
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full justify-start"
+            onClick={handleSync}
           >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Sync to text
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full justify-start"
+            onClick={handleClear}
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
             Clear
-          </button>
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full justify-start"
+            onClick={() => setApiDialogOpen(true)}
+          >
+            <Key className="w-4 h-4 mr-2" />
+            Set API
+          </Button>
         </div>
-        
-        <button
-          onClick={handleSync}
-          className="w-full btn-success"
-        >
-          Sync to Text
-        </button>
-      </div>
-    </div>
+      </CardContent>
+      <ApiDialog open={apiDialogOpen} onOpenChange={setApiDialogOpen} />
+    </Card>
   )
 }
 

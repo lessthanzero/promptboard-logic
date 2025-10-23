@@ -1,10 +1,15 @@
 import React, { useState } from 'react'
 import { usePromptBoardStore } from '../lib/store'
 import AssistantPanel from './AssistantPanel'
+import { Button } from './ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
+import { Tabs, TabsList, TabsTrigger } from './ui/tabs'
+import { Copy, Check } from 'lucide-react'
 
 const Sidebar: React.FC = () => {
   const { nodes, edges } = usePromptBoardStore()
   const [activeTab, setActiveTab] = useState<'json' | 'assistant'>('json')
+  const [copied, setCopied] = useState(false)
 
   const jsonData = {
     nodes,
@@ -14,60 +19,53 @@ const Sidebar: React.FC = () => {
 
   const handleCopy = () => {
     navigator.clipboard.writeText(JSON.stringify(jsonData, null, 2))
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Tabs */}
-      <div className="flex border-b border-gray-200 dark:border-gray-700">
-        <button
-          onClick={() => setActiveTab('json')}
-          className={`flex-1 px-4 py-2 text-sm font-medium ${
-            activeTab === 'json'
-              ? 'text-blue-600 border-b-2 border-blue-600 dark:text-blue-400'
-              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-          }`}
-        >
-          JSON View
-        </button>
-        <button
-          onClick={() => setActiveTab('assistant')}
-          className={`flex-1 px-4 py-2 text-sm font-medium ${
-            activeTab === 'assistant'
-              ? 'text-blue-600 border-b-2 border-blue-600 dark:text-blue-400'
-              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-          }`}
-        >
-          AI Assistant
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 p-4 min-h-0">
+    <Card className="h-full rounded-none border-0 border-l flex flex-col">
+      <CardHeader className="pb-3 border-b">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'json' | 'assistant')}>
+              <TabsList>
+                <TabsTrigger value="json">JSON view</TabsTrigger>
+                <TabsTrigger value="assistant">AI assistant</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        </div>
+      </CardHeader>
+      <CardHeader className="py-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg">Logic structure</CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopy}
+          >
+            {copied ? (
+              <Check className="w-4 h-4 mr-1" />
+            ) : (
+              <Copy className="w-4 h-4 mr-1" />
+            )}
+            Copy
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="flex-1 overflow-hidden">
         {activeTab === 'json' ? (
-          <div className="h-full flex flex-col">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-white">Logic Structure</h3>
-              <button 
-                onClick={handleCopy}
-                className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 min-h-[44px] px-2"
-                title="Copy JSON"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                Copy
-              </button>
-            </div>
-            <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg text-xs font-mono overflow-auto flex-1 text-gray-900 dark:text-gray-100">
-              {JSON.stringify(jsonData, null, 2)}
+          <div className="h-full overflow-auto">
+            <pre className="text-xs bg-muted p-4 rounded-lg h-full">
+              <code>{JSON.stringify(jsonData, null, 2)}</code>
             </pre>
           </div>
         ) : (
           <AssistantPanel />
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }
 

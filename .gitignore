@@ -6,3 +6,6 @@ dist/
 !env.example
 *.log
 components.json
+
+# Misc folder
+misc/

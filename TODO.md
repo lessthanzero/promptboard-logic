@@ -84,6 +84,11 @@
   - [x] Smooth resize animations
 
 ### Phase 2: Advanced Interactions (Week 2-3)
+- [ ] **Toast System Migration**
+  - [ ] Switch from custom toast system to sonner
+  - [ ] Update all toast calls to use sonner API
+  - [ ] Remove custom toast components and contexts
+  - [ ] Test toast functionality across all components
 - [ ] **Interactive Tutorial**
   - [ ] Step-by-step onboarding flow
   - [ ] Highlight UI elements with spotlight

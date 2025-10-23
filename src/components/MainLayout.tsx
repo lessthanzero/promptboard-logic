@@ -1,71 +1,44 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from './ui/resizable'
 import Header from './Header'
 import PromptPanel from './PromptPanel'
 import CanvasArea from './CanvasArea'
 import Sidebar from './Sidebar'
-import ResizablePanel from './ResizablePanel'
 
 const MainLayout: React.FC = () => {
-  const [leftPanelWidth, setLeftPanelWidth] = useState(320)
-  const [rightPanelWidth, setRightPanelWidth] = useState(320)
-
-  // Load panel sizes from localStorage on mount
-  useEffect(() => {
-    const savedLeftWidth = localStorage.getItem('promptboard-left-panel-width')
-    const savedRightWidth = localStorage.getItem('promptboard-right-panel-width')
-    
-    if (savedLeftWidth) {
-      setLeftPanelWidth(parseInt(savedLeftWidth, 10))
-    }
-    if (savedRightWidth) {
-      setRightPanelWidth(parseInt(savedRightWidth, 10))
-    }
-  }, [])
-
-  // Save panel sizes to localStorage
-  const handleLeftPanelResize = (width: number) => {
-    setLeftPanelWidth(width)
-    localStorage.setItem('promptboard-left-panel-width', width.toString())
-  }
-
-  const handleRightPanelResize = (width: number) => {
-    setRightPanelWidth(width)
-    localStorage.setItem('promptboard-right-panel-width', width.toString())
-  }
 
   return (
-    <div className="h-screen w-full flex flex-col">
+    <div className="h-screen w-full flex flex-col bg-white">
+      {/* Status Bar */}
+      <div className="bg-gray-100 border-b px-6 py-2 flex items-center justify-center">
+        <p className="text-sm text-gray-600">Analyzing your logic...</p>
+      </div>
+
       {/* Header */}
       <Header />
       
       {/* Main Content */}
-      <div className="flex-1 flex">
-        {/* Left Panel - Prompt Input (resizable) */}
-        <ResizablePanel
-          initialWidth={leftPanelWidth}
-          minWidth={200}
-          maxWidth={600}
-          onResize={handleLeftPanelResize}
-          className="border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto"
-        >
-          <PromptPanel />
-        </ResizablePanel>
-        
-        {/* Center Panel - Canvas (flexible) */}
-        <div className="flex-1 bg-gray-50 dark:bg-gray-900 min-h-screen">
-          <CanvasArea />
-        </div>
-        
-        {/* Right Panel - Sidebar (resizable) */}
-        <ResizablePanel
-          initialWidth={rightPanelWidth}
-          minWidth={200}
-          maxWidth={600}
-          onResize={handleRightPanelResize}
-          className="border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto"
-        >
-          <Sidebar />
-        </ResizablePanel>
+      <div className="flex-1 overflow-hidden">
+        <ResizablePanelGroup direction="horizontal">
+          {/* Left Panel - Prompt Input (25%) */}
+          <ResizablePanel defaultSize={25} minSize={15}>
+            <PromptPanel />
+          </ResizablePanel>
+
+          <ResizableHandle />
+
+          {/* Center Panel - Canvas (50%) */}
+          <ResizablePanel defaultSize={50} minSize={30}>
+            <CanvasArea />
+          </ResizablePanel>
+
+          <ResizableHandle />
+
+          {/* Right Panel - Sidebar (25%) */}
+          <ResizablePanel defaultSize={25} minSize={15}>
+            <Sidebar />
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
     </div>
   )

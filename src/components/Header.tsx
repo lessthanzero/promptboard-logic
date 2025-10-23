@@ -1,59 +1,37 @@
 import React from 'react'
 import { usePromptBoardStore } from '../lib/store'
-import { useTheme } from '../contexts/ThemeContext'
+import { Button } from './ui/button'
+import { Badge } from './ui/badge'
+import { FileJson, FileText, FileDown, Play } from 'lucide-react'
 
 const Header: React.FC = () => {
   const { exportJSON, exportMarkdown, exportPDF } = usePromptBoardStore()
-  const { isDark, toggleTheme } = useTheme()
 
   return (
-    <div className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
-      <div className="flex items-center gap-4">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white">PromptBoard</h1>
-        <span className="text-sm text-gray-500 dark:text-gray-400">AI Logic Board</span>
+    <header className="border-b px-6 py-4 flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <h1 className="text-2xl font-extrabold">PromptBoard</h1>
+        <Badge variant="secondary">AI Logic Board</Badge>
       </div>
-      
-      <div className="flex items-center gap-4">
-        {/* Export Buttons */}
-        <div className="btn-group">
-          <button
-            onClick={exportJSON}
-            className="btn-primary text-sm px-3 py-1"
-          >
-            JSON
-          </button>
-          <button
-            onClick={exportMarkdown}
-            className="btn-success text-sm px-3 py-1"
-          >
-            Markdown
-          </button>
-          <button
-            onClick={exportPDF}
-            className="btn-danger text-sm px-3 py-1"
-          >
-            PDF
-          </button>
-        </div>
-        
-        {/* Dark Mode Toggle */}
-        <button
-          onClick={toggleTheme}
-          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors duration-200 min-h-[44px] px-2"
-          title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {isDark ? (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-            </svg>
-          )}
-        </button>
+      <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm" onClick={exportJSON}>
+          <FileJson className="w-4 h-4 mr-1" />
+          JSON
+        </Button>
+        <Button variant="outline" size="sm" onClick={exportMarkdown}>
+          <FileText className="w-4 h-4 mr-1" />
+          Markdown
+        </Button>
+        <Button variant="outline" size="sm" onClick={exportPDF}>
+          <FileDown className="w-4 h-4 mr-1" />
+          PDF
+        </Button>
+        <Button variant="default" size="sm">
+          <Play className="w-4 h-4 mr-1" />
+          Execute
+        </Button>
       </div>
-    </div>
+    </header>
   )
 }
 

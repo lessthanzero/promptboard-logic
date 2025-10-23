@@ -1,84 +1,86 @@
-import React, { useMemo } from 'react'
-import { ReactFlow, ReactFlowProvider, Background, Controls, MiniMap } from 'reactflow'
-import { usePromptBoardStore } from '../lib/store'
-import { nodeTypes } from '../components/nodes'
-import EmptyState from './EmptyState'
-import LoadingOverlay from './LoadingOverlay'
-import 'reactflow/dist/style.css'
+import React from 'react'
+import { Card, CardContent } from './ui/card'
+import { Badge } from './ui/badge'
 
 const CanvasArea: React.FC = () => {
-  const { nodes, edges } = usePromptBoardStore()
-
-  // Memoize nodes and edges for performance
-  const memoizedNodes = useMemo(() => nodes, [nodes])
-  const memoizedEdges = useMemo(() => edges, [edges])
-
-  // Performance optimization for large graphs
-  const isLargeGraph = nodes.length > 20
-  const nodeTypesOptimized = useMemo(() => nodeTypes, [])
 
   return (
-    <div className="h-full relative">
-      <ReactFlowProvider>
-        <ReactFlow
-          nodes={memoizedNodes}
-          edges={memoizedEdges}
-          nodeTypes={nodeTypesOptimized}
-          fitView
-          className="bg-gray-50"
-          // Performance optimizations
-          nodesDraggable={!isLargeGraph}
-          nodesConnectable={!isLargeGraph}
-          elementsSelectable={!isLargeGraph}
-          // Virtualization settings
-          onlyRenderVisibleElements={isLargeGraph}
-          // Layout optimization
-          defaultViewport={{ x: 0, y: 0, zoom: 1 }}
-          minZoom={0.1}
-          maxZoom={2}
-        >
-          <Background 
-            gap={isLargeGraph ? 20 : 12} 
-            size={isLargeGraph ? 0.5 : 1}
+    <div className="h-full relative bg-gray-50">
+      {/* Canvas Dotted Background */}
+      <div 
+        className="absolute inset-0" 
+        style={{
+          backgroundImage: `radial-gradient(circle, rgb(107 114 128 / 0.3) 1px, transparent 1px)`,
+          backgroundSize: '20px 20px'
+        }}
+      />
+      
+      {/* Logic Flow Visualization */}
+      <div className="relative h-full flex items-center justify-center">
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
+          {/* Noodle connectors */}
+          {/* Yes path from Condition to Action */}
+          <path
+            d="M 500 180 C 500 220, 440 220, 440 260"
+            fill="none"
+            stroke="hsl(var(--primary))"
+            strokeWidth="2.5"
           />
-          <Controls 
-            showInteractive={!isLargeGraph}
-            showZoom={true}
-            showFitView={true}
+          {/* No path from Condition (going right) */}
+          <path
+            d="M 560 160 C 620 160, 620 220, 620 280"
+            fill="none"
+            stroke="hsl(var(--muted-foreground))"
+            strokeWidth="2.5"
+            strokeDasharray="5,5"
           />
-          <MiniMap 
-            nodeStrokeColor="#94a3b8"
-            nodeColor="#f1f5f9"
-            nodeBorderRadius={4}
-            maskColor="rgba(0, 0, 0, 0.1)"
-            style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.8)',
-              border: '1px solid #e2e8f0'
-            }}
+          {/* Path from Action to Outcome */}
+          <path
+            d="M 440 315 C 440 350, 480 350, 480 380"
+            fill="none"
+            stroke="hsl(var(--primary))"
+            strokeWidth="2.5"
           />
-        </ReactFlow>
-        
-        {/* Empty State */}
-        {nodes.length === 0 && <EmptyState />}
-        
-        {/* Loading Overlay */}
-        <LoadingOverlay />
-        
-        {/* Performance Warning for Large Graphs */}
-        {isLargeGraph && (
-          <div className="absolute top-4 right-4 bg-yellow-100 border border-yellow-300 rounded-lg p-3 max-w-xs">
-            <div className="flex items-center gap-2">
-              <div className="text-yellow-600">⚠️</div>
-              <div className="text-sm">
-                <p className="font-medium text-yellow-800">Large Graph</p>
-                <p className="text-yellow-700">
-                  Some interactions disabled for performance
-                </p>
-              </div>
-            </div>
+        </svg>
+
+        {/* Condition Node */}
+        <div className="absolute" style={{ top: '120px', left: '420px', zIndex: 2 }}>
+          <Card className="w-56 shadow-lg bg-white border-gray-200">
+            <CardContent className="p-3">
+              <Badge variant="outline" className="mb-2">condition</Badge>
+              <p className="text-sm text-left text-gray-900">User skips onboarding?</p>
+            </CardContent>
+          </Card>
+          {/* Labels for connectors */}
+          <div className="absolute" style={{ top: '50px', left: '-30px' }}>
+            <span className="text-xs text-blue-600">yes</span>
           </div>
-        )}
-      </ReactFlowProvider>
+          <div className="absolute" style={{ top: '30px', right: '-30px' }}>
+            <span className="text-xs text-gray-500">no</span>
+          </div>
+        </div>
+
+        {/* Action Node */}
+        <div className="absolute" style={{ top: '260px', left: '360px', zIndex: 2 }}>
+          <Card className="w-40 shadow-lg bg-white border-gray-200">
+            <CardContent className="p-3">
+              <Badge variant="secondary" className="mb-2">action</Badge>
+              <p className="text-sm text-left text-gray-900">Show tooltip reminder</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Outcome Node */}
+        <div className="absolute" style={{ top: '380px', left: '360px', zIndex: 2 }}>
+          <Card className="w-64 shadow-lg bg-white border-gray-200">
+            <CardContent className="p-3">
+              <Badge variant="default" className="mb-2">outcome</Badge>
+              <p className="text-sm text-left text-gray-900">Reduced confusion</p>
+              <p className="text-xs text-gray-500 mt-1 text-left">Stopping flow</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }

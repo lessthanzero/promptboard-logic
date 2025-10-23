@@ -14,7 +14,8 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       if (saved) {
         return saved === 'dark'
       }
-      return window.matchMedia('(prefers-color-scheme: dark)').matches
+      // Default to light mode to match screenshot design
+      return false
     }
     return false
   })
