@@ -4,9 +4,17 @@
  * This service handles all AI interactions using the configuration
  * from ai-config.ts. It provides a clean interface for OpenAI integration
  * with proper error handling, caching, and fallback mechanisms.
+ * 
+ * Security Features:
+ * - Secure API key storage with encryption
+ * - API key validation and testing
+ * - Secure data transmission
+ * - Privacy-first data handling
  */
 
 import { AI_SYSTEM_CONFIG } from './ai-config';
+import { apiKeyManager } from './api-key-manager';
+import { secureStorage } from './secure-storage';
 
 export interface LogicStructure {
   nodes: Array<{
@@ -38,43 +46,95 @@ export interface AIResponse {
 }
 
 class AIService {
-  private apiKey: string | null = null;
   private cache = new Map<string, AIResponse>();
+  private isInitialized = false;
 
   constructor() {
-    this.loadApiKey();
+    this.initialize();
   }
 
   /**
-   * Set the OpenAI API key
+   * Initialize the AI service with secure storage
    */
-  setApiKey(key: string): void {
-    this.apiKey = key;
-    localStorage.setItem('promptboard_api_key', key);
+  private async initialize(): Promise<void> {
+    try {
+      await secureStorage.initialize();
+      this.isInitialized = true;
+    } catch (error) {
+      console.error('Failed to initialize secure storage:', error);
+    }
   }
 
   /**
-   * Load API key from localStorage
+   * Set the OpenAI API key securely
    */
-  private loadApiKey(): void {
-    const stored = localStorage.getItem('promptboard_api_key');
-    if (stored) {
-      this.apiKey = stored;
+  async setApiKey(key: string, provider: 'openai' | 'anthropic' | 'custom' = 'openai'): Promise<boolean> {
+    try {
+      // Validate the key format
+      const validation = await apiKeyManager.validateAPIKey(key, provider);
+      if (!validation.isValid) {
+        throw new Error(validation.error || 'Invalid API key format');
+      }
+
+      // Test the key if possible
+      const isValid = await apiKeyManager.testAPIKey(key, provider);
+      if (!isValid && provider !== 'custom') {
+        throw new Error('API key test failed');
+      }
+
+      // Store the key securely
+      await apiKeyManager.storeAPIKey(key, provider);
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to set API key:', error);
+      throw error;
     }
   }
 
   /**
    * Check if API key is available
    */
-  hasApiKey(): boolean {
-    return !!this.apiKey;
+  async hasApiKey(provider: 'openai' | 'anthropic' | 'custom' = 'openai'): Promise<boolean> {
+    try {
+      return await apiKeyManager.hasAPIKey(provider);
+    } catch (error) {
+      console.error('Failed to check API key:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get API key info (without the actual key)
+   */
+  async getApiKeyInfo(provider: 'openai' | 'anthropic' | 'custom' = 'openai') {
+    try {
+      return await apiKeyManager.getAPIKeyInfo(provider);
+    } catch (error) {
+      console.error('Failed to get API key info:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Clear API key
+   */
+  async clearApiKey(provider: 'openai' | 'anthropic' | 'custom' = 'openai'): Promise<void> {
+    try {
+      await apiKeyManager.clearAPIKey(provider);
+    } catch (error) {
+      console.error('Failed to clear API key:', error);
+      throw error;
+    }
   }
 
   /**
    * Generate logic structure from natural language
    */
-  async getLogicFromPrompt(promptText: string): Promise<AIResponse> {
-    if (!this.apiKey) {
+  async getLogicFromPrompt(promptText: string, provider: 'openai' | 'anthropic' | 'custom' = 'openai'): Promise<AIResponse> {
+    // Check if we have a valid API key
+    const hasKey = await this.hasApiKey(provider);
+    if (!hasKey) {
       return this.getMockLogicFromPrompt(promptText);
     }
 
@@ -85,9 +145,16 @@ class AIService {
     }
 
     try {
-      const response = await this.callOpenAI(
+      const apiKey = await apiKeyManager.getAPIKey(provider);
+      if (!apiKey) {
+        throw new Error('API key not available');
+      }
+
+      const response = await this.callAI(
         AI_SYSTEM_CONFIG.prompts.logicAnalysis,
-        promptText
+        promptText,
+        apiKey,
+        provider
       );
 
       const logicStructure = this.parseLogicResponse(response);
@@ -107,8 +174,9 @@ class AIService {
   /**
    * Convert logic structure back to natural language
    */
-  async summarizeGraph(logicStructure: LogicStructure): Promise<AIResponse> {
-    if (!this.apiKey) {
+  async summarizeGraph(logicStructure: LogicStructure, provider: 'openai' | 'anthropic' | 'custom' = 'openai'): Promise<AIResponse> {
+    const hasKey = await this.hasApiKey(provider);
+    if (!hasKey) {
       return this.getMockSummarization(logicStructure);
     }
 
@@ -119,9 +187,16 @@ class AIService {
     }
 
     try {
-      const response = await this.callOpenAI(
+      const apiKey = await apiKeyManager.getAPIKey(provider);
+      if (!apiKey) {
+        throw new Error('API key not available');
+      }
+
+      const response = await this.callAI(
         AI_SYSTEM_CONFIG.prompts.textSummarization,
-        JSON.stringify(logicStructure)
+        JSON.stringify(logicStructure),
+        apiKey,
+        provider
       );
 
       const result: AIResponse = {
@@ -140,8 +215,9 @@ class AIService {
   /**
    * Get suggestions for improving logic
    */
-  async getSuggestions(logicStructure: LogicStructure): Promise<AIResponse> {
-    if (!this.apiKey) {
+  async getSuggestions(logicStructure: LogicStructure, provider: 'openai' | 'anthropic' | 'custom' = 'openai'): Promise<AIResponse> {
+    const hasKey = await this.hasApiKey(provider);
+    if (!hasKey) {
       return this.getMockSuggestions(logicStructure);
     }
 
@@ -152,9 +228,16 @@ class AIService {
     }
 
     try {
-      const response = await this.callOpenAI(
+      const apiKey = await apiKeyManager.getAPIKey(provider);
+      if (!apiKey) {
+        throw new Error('API key not available');
+      }
+
+      const response = await this.callAI(
         AI_SYSTEM_CONFIG.prompts.suggestions,
-        JSON.stringify(logicStructure)
+        JSON.stringify(logicStructure),
+        apiKey,
+        provider
       );
 
       const suggestions = this.parseSuggestionsResponse(response);
@@ -172,17 +255,38 @@ class AIService {
   }
 
   /**
+   * Call AI API with proper error handling and security
+   */
+  private async callAI(
+    systemPrompt: string, 
+    userPrompt: string, 
+    apiKey: string, 
+    provider: 'openai' | 'anthropic' | 'custom'
+  ): Promise<string> {
+    // Sanitize inputs to prevent injection attacks
+    const sanitizedSystemPrompt = this.sanitizeInput(systemPrompt);
+    const sanitizedUserPrompt = this.sanitizeInput(userPrompt);
+
+    switch (provider) {
+      case 'openai':
+        return await this.callOpenAI(sanitizedSystemPrompt, sanitizedUserPrompt, apiKey);
+      case 'anthropic':
+        return await this.callAnthropic(sanitizedSystemPrompt, sanitizedUserPrompt, apiKey);
+      case 'custom':
+        throw new Error('Custom provider not implemented');
+      default:
+        throw new Error('Unknown provider');
+    }
+  }
+
+  /**
    * Call OpenAI API with proper error handling
    */
-  private async callOpenAI(systemPrompt: string, userPrompt: string): Promise<string> {
-    if (!this.apiKey) {
-      throw new Error('No API key available');
-    }
-
+  private async callOpenAI(systemPrompt: string, userPrompt: string, apiKey: string): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -202,6 +306,50 @@ class AIService {
 
     const data = await response.json();
     return data.choices[0]?.message?.content || '';
+  }
+
+  /**
+   * Call Anthropic API with proper error handling
+   */
+  private async callAnthropic(systemPrompt: string, userPrompt: string, apiKey: string): Promise<string> {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-3-sonnet-20240229',
+        max_tokens: AI_SYSTEM_CONFIG.config.maxTokens,
+        system: systemPrompt,
+        messages: [
+          {
+            role: 'user',
+            content: userPrompt
+          }
+        ]
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Anthropic API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.content[0]?.text || '';
+  }
+
+  /**
+   * Sanitize input to prevent injection attacks
+   */
+  private sanitizeInput(input: string): string {
+    // Remove potentially dangerous characters
+    return input
+      .replace(/[<>]/g, '') // Remove angle brackets
+      .replace(/javascript:/gi, '') // Remove javascript: protocol
+      .replace(/on\w+=/gi, '') // Remove event handlers
+      .trim();
   }
 
   /**

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select';
@@ -9,10 +9,13 @@ import { Badge } from './components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './components/ui/dialog';
 import { Input } from './components/ui/input';
 import { Label } from './components/ui/label';
-import { FileJson, FileText, FileDown, Copy, Check, Sparkles, TestTube, Trash2, RefreshCw, Key, Play, X, ArrowLeft, ArrowRight } from 'lucide-react';
+import { FileJson, FileText, FileDown, Copy, Check, Sparkles, TestTube, Trash2, RefreshCw, Key, Play, X, ArrowLeft, ArrowRight, Shield, Settings } from 'lucide-react';
 import LogicNode from './components/LogicNode';
 import ZoomControls from './components/ZoomControls';
+import { APIKeyManager } from './components/APIKeyManager';
+import { PrivacyManager } from './components/PrivacyManager';
 import { useWorkspaceNavigation } from './hooks/useWorkspaceNavigation';
+import { aiService } from './lib/ai-service';
 import mockData from '../mocks/ai-responses.json';
 
 export default function App() {
@@ -23,7 +26,24 @@ export default function App() {
     'If dfdf, then:\n  → show tooltip reminder\n\nIf normal flow, then:'
   );
   const [apiDialogOpen, setApiDialogOpen] = useState(false);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [apiKey, setApiKey] = useState('');
+  const [hasApiKey, setHasApiKey] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // Check for API key on mount
+  useEffect(() => {
+    checkApiKey();
+  }, []);
+
+  const checkApiKey = async () => {
+    try {
+      const hasKey = await aiService.hasApiKey('openai');
+      setHasApiKey(hasKey);
+    } catch (error) {
+      console.error('Failed to check API key:', error);
+    }
+  };
 
   // Workspace navigation
   const {
@@ -81,24 +101,54 @@ export default function App() {
   };
 
   // Button handlers
-  const handleGenerateLogic = () => {
-    // Map persona types to mock data scenarios
-    const personaMap = {
-      'PM': 0,        // onboarding-skip
-      'Engineering': 1, // pricing-strategy  
-      'Design': 2     // feature-rollout
-    };
+  const handleGenerateLogic = async () => {
+    setIsGenerating(true);
     
-    const scenarioIndex = personaMap[logicType as keyof typeof personaMap] || 0;
-    const scenario = mockData.samplePrompts[scenarioIndex];
-    
-    // Update the current scenario index to change the diagram
-    setCurrentScenarioIndex(scenarioIndex);
-    
-    // Also update the logic summary to match the selected scenario
-    setLogicSummary(scenario.prompt);
-    
-    console.log('Generated logic for:', logicType, 'Scenario:', scenario.id);
+    try {
+      // Use AI service to generate logic from prompt
+      const response = await aiService.getLogicFromPrompt(logicSummary, 'openai');
+      
+      if (response.success && response.data) {
+        // Update the diagram with AI-generated logic
+        const logicStructure = response.data as any;
+        // For now, we'll use mock data but in the future this would update the actual diagram
+        console.log('AI Generated Logic:', logicStructure);
+        
+        // Show success message
+        alert('Logic generated successfully!');
+      } else {
+        // Fallback to mock data
+        const personaMap = {
+          'PM': 0,        // onboarding-skip
+          'Engineering': 1, // pricing-strategy  
+          'Design': 2     // feature-rollout
+        };
+        
+        const scenarioIndex = personaMap[logicType as keyof typeof personaMap] || 0;
+        const scenario = mockData.samplePrompts[scenarioIndex];
+        
+        setCurrentScenarioIndex(scenarioIndex);
+        setLogicSummary(scenario.prompt);
+      }
+    } catch (error) {
+      console.error('Failed to generate logic:', error);
+      alert('Failed to generate logic. Using mock data instead.');
+      
+      // Fallback to mock data
+      const personaMap = {
+        'PM': 0,        // onboarding-skip
+        'Engineering': 1, // pricing-strategy  
+        'Design': 2     // feature-rollout
+      };
+      
+      const scenarioIndex = personaMap[logicType as keyof typeof personaMap] || 0;
+      const scenario = mockData.samplePrompts[scenarioIndex];
+      
+      setCurrentScenarioIndex(scenarioIndex);
+      setLogicSummary(scenario.prompt);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleSample = () => {
@@ -275,6 +325,15 @@ export default function App() {
             <FileDown className="w-4 h-4 mr-1" />
             PDF
           </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setSettingsDialogOpen(true)}
+            className="flex items-center gap-1"
+          >
+            <Settings className="w-4 h-4" />
+            Settings
+          </Button>
           <Button className="bg-purple-600 hover:bg-purple-700 text-white" size="sm" onClick={handleExecute}>
             <Play className="w-4 h-4 mr-1" />
             Execute
@@ -312,9 +371,15 @@ export default function App() {
                   />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Button variant="secondary" size="sm" className="w-full justify-start" onClick={handleGenerateLogic}>
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    className="w-full justify-start" 
+                    onClick={handleGenerateLogic}
+                    disabled={isGenerating}
+                  >
                     <Sparkles className="w-4 h-4 mr-2" />
-                    Generate logic
+                    {isGenerating ? 'Generating...' : 'Generate logic'}
                   </Button>
                   <Button variant="secondary" size="sm" className="w-full justify-start" onClick={handleSample}>
                     <TestTube className="w-4 h-4 mr-2" />
@@ -687,6 +752,42 @@ export default function App() {
             </Button>
             <Button onClick={handleApply}>
               Apply
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Settings Dialog */}
+      <Dialog open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="w-5 h-5" />
+              Settings & Security
+            </DialogTitle>
+            <DialogDescription>
+              Manage your API keys, privacy settings, and security preferences.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6">
+            <Tabs defaultValue="api" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="api">API Keys</TabsTrigger>
+                <TabsTrigger value="privacy">Privacy</TabsTrigger>
+              </TabsList>
+              <div className="mt-4">
+                <Tabs value="api" className="hidden">
+                  <APIKeyManager />
+                </Tabs>
+                <Tabs value="privacy" className="hidden">
+                  <PrivacyManager />
+                </Tabs>
+              </div>
+            </Tabs>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSettingsDialogOpen(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
