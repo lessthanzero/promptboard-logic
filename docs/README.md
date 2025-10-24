@@ -23,6 +23,9 @@ This directory contains comprehensive documentation for PromptBoard, an AI Logic
 - **[Security Implementation Plan](security-implementation-plan.md)** - Step-by-step implementation roadmap
 - **[AI System Prompts](ai-system-prompts.md)** - System prompts and diagram architecture rules
 
+### 📊 Analytics & Telemetry
+- **[Telemetry Plan](telemetry-plan.md)** - Privacy-first telemetry and analytics strategy
+
 ## Key Features Documented
 
 ### 🎯 Core Functionality
@@ -59,6 +62,7 @@ This directory contains comprehensive documentation for PromptBoard, an AI Logic
 ### 🚧 In Progress
 - [ ] **Security Implementation**: Secure storage, API key management
 - [ ] **Privacy Controls**: GDPR compliance, data retention
+- [ ] **Telemetry & Analytics**: Privacy-first user analytics and performance monitoring
 - [ ] **Advanced Features**: Real-time collaboration, templates
 - [ ] **Performance Optimization**: Virtualization, caching
 
@@ -84,6 +88,13 @@ This directory contains comprehensive documentation for PromptBoard, an AI Logic
 - **Secure Storage** with TTL
 - **API Key Management** with validation
 - **Privacy Controls** with GDPR compliance
+
+### Analytics & Telemetry
+- **Privacy-First Analytics** with user consent
+- **Performance Monitoring** with real-time metrics
+- **User Experience Tracking** with anonymized data
+- **Security Event Monitoring** with audit trails
+- **Product Analytics** with usage insights
 
 ### AI Integration
 - **OpenAI API** with GPT-4
