@@ -9,7 +9,7 @@ import { Badge } from './components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './components/ui/dialog';
 import { Input } from './components/ui/input';
 import { Label } from './components/ui/label';
-import { FileJson, FileText, FileDown, Copy, Check, Sparkles, TestTube, Trash2, RefreshCw, Key, Play } from 'lucide-react';
+import { FileJson, FileText, FileDown, Copy, Check, Sparkles, TestTube, Trash2, RefreshCw, Key, Play, X, ArrowLeft, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 
 export default function App() {
@@ -21,6 +21,20 @@ export default function App() {
   );
   const [apiDialogOpen, setApiDialogOpen] = useState(false);
   const [apiKey, setApiKey] = useState('');
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [currentStep, setCurrentStep] = useState<{
+    type: 'condition' | 'action' | 'outcome';
+    id: string;
+    content: string;
+    badge: string;
+  } | null>(null);
+  const [executionHistory, setExecutionHistory] = useState<Array<{
+    type: 'condition' | 'action' | 'outcome';
+    id: string;
+    content: string;
+    badge: string;
+  }>>([]);
+  const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
 
   const logicStructure = {
     nodes: [
@@ -61,6 +75,86 @@ export default function App() {
     setApiDialogOpen(false);
   };
 
+  const handleExecute = () => {
+    // Start execution with the first condition
+    const firstStep = {
+      type: 'condition' as const,
+      id: 'node-1',
+      content: 'dfdsfdsfsdfsdfsdf',
+      badge: 'condition'
+    };
+    setCurrentStep(firstStep);
+    setExecutionHistory([firstStep]);
+    setCurrentHistoryIndex(0);
+    setIsExecuting(true);
+  };
+
+  const handleStopExecution = () => {
+    setIsExecuting(false);
+    setCurrentStep(null);
+    setExecutionHistory([]);
+    setCurrentHistoryIndex(-1);
+  };
+
+  const addStepToHistory = (step: {
+    type: 'condition' | 'action' | 'outcome';
+    id: string;
+    content: string;
+    badge: string;
+  }) => {
+    // Truncate history after current index and add new step
+    const newHistory = executionHistory.slice(0, currentHistoryIndex + 1);
+    newHistory.push(step);
+    setExecutionHistory(newHistory);
+    setCurrentHistoryIndex(newHistory.length - 1);
+    setCurrentStep(step);
+  };
+
+  const handleConditionResponse = (response: 'yes' | 'no') => {
+    if (response === 'yes') {
+      // Go to Action node
+      addStepToHistory({
+        type: 'action',
+        id: 'node-2',
+        content: 'dfsfds',
+        badge: 'action'
+      });
+    } else {
+      // For demo, end execution on "no"
+      toast.info('No path selected - execution ended');
+      handleStopExecution();
+    }
+  };
+
+  const handleActionDone = () => {
+    // Go to Outcome node
+    addStepToHistory({
+      type: 'outcome',
+      id: 'node-3',
+      content: 'Reduced confusion',
+      badge: 'outcome'
+    });
+  };
+
+  const handleBackward = () => {
+    if (currentHistoryIndex > 0) {
+      const newIndex = currentHistoryIndex - 1;
+      setCurrentHistoryIndex(newIndex);
+      setCurrentStep(executionHistory[newIndex]);
+    }
+  };
+
+  const handleForward = () => {
+    if (currentHistoryIndex < executionHistory.length - 1) {
+      const newIndex = currentHistoryIndex + 1;
+      setCurrentHistoryIndex(newIndex);
+      setCurrentStep(executionHistory[newIndex]);
+    }
+  };
+
+  const canGoBackward = currentHistoryIndex > 0;
+  const canGoForward = currentHistoryIndex < executionHistory.length - 1;
+
   return (
     <div className="h-screen flex flex-col bg-background">
       {/* Status Bar */}
@@ -87,7 +181,7 @@ export default function App() {
             <FileDown className="w-4 h-4 mr-1" />
             PDF
           </Button>
-          <Button className="bg-purple-600 hover:bg-purple-700 text-white" size="sm">
+          <Button className="bg-purple-600 hover:bg-purple-700 text-white" size="sm" onClick={handleExecute}>
             <Play className="w-4 h-4 mr-1" />
             Execute
           </Button>
@@ -312,6 +406,105 @@ export default function App() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Execution Overlay */}
+      {isExecuting && (
+        <div className="fixed inset-0 bg-white/75 z-50 flex items-center justify-center">
+          {/* Stop Button */}
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute top-4 right-4 rounded-full"
+            onClick={handleStopExecution}
+          >
+            <X className="w-4 h-4" />
+          </Button>
+
+          {/* Execution Card */}
+          {currentStep && (
+            <div className="transform scale-150">
+              <Card className="w-64 shadow-2xl">
+                <CardContent className="p-4">
+                  <Badge
+                    variant={
+                      currentStep.type === 'condition'
+                        ? 'outline'
+                        : currentStep.type === 'action'
+                        ? 'secondary'
+                        : 'default'
+                    }
+                    className="mb-3"
+                  >
+                    {currentStep.badge}
+                  </Badge>
+                  <p className="text-sm text-left mb-4">{currentStep.content}</p>
+
+                  {/* Condition Buttons */}
+                  {currentStep.type === 'condition' && (
+                    <div className="flex gap-2 mt-4">
+                      <Button
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleConditionResponse('yes')}
+                      >
+                        Yes
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => handleConditionResponse('no')}
+                      >
+                        No
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Action Button */}
+                  {currentStep.type === 'action' && (
+                    <div className="mt-4">
+                      <Button size="sm" className="w-full" onClick={handleActionDone}>
+                        Done
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Outcome - No button, just display */}
+                  {currentStep.type === 'outcome' && (
+                    <div className="mt-2">
+                      <p className="text-xs text-muted-foreground text-left">
+                        Stopping flow
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Navigation Arrows - Bottom Center */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full"
+              onClick={handleBackward}
+              disabled={!canGoBackward}
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full"
+              onClick={handleForward}
+              disabled={!canGoForward}
+            >
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

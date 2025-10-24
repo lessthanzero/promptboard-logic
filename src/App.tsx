@@ -63,6 +63,63 @@ export default function App() {
     setApiDialogOpen(false);
   };
 
+  // Button handlers
+  const handleGenerateLogic = () => {
+    // Map persona types to mock data scenarios
+    const personaMap = {
+      'PM': 0,        // onboarding-skip
+      'Engineering': 1, // pricing-strategy  
+      'Design': 2     // feature-rollout
+    };
+    
+    const scenarioIndex = personaMap[logicType as keyof typeof personaMap] || 0;
+    const scenario = mockData.samplePrompts[scenarioIndex];
+    
+    // Update the logic structure with the selected scenario
+    // This would normally update the store, but for now we'll just log
+    console.log('Generating logic for:', logicType, scenario);
+    
+    // In a real implementation, this would:
+    // 1. Update the nodes and edges in the store
+    // 2. Trigger a re-render of the canvas
+    // 3. Show loading state
+  };
+
+  const handleSample = () => {
+    const personaMap = {
+      'PM': 0,        // onboarding-skip
+      'Engineering': 1, // pricing-strategy  
+      'Design': 2     // feature-rollout
+    };
+    
+    const scenarioIndex = personaMap[logicType as keyof typeof personaMap] || 0;
+    const scenario = mockData.samplePrompts[scenarioIndex];
+    
+    // Load the prompt text into Logic summary
+    setLogicSummary(scenario.prompt);
+  };
+
+  const handleSyncToText = () => {
+    // Reset to default preset based on current persona
+    const defaultPresets = {
+      'PM': 'If user skips onboarding, show tooltip reminder, else proceed to dashboard.',
+      'Engineering': 'If we increase price by 20%, churn may rise but revenue increases. If churn rises too much, we need to add value.',
+      'Design': 'If A/B test shows 20% improvement, roll out globally. If not, iterate and retest.'
+    };
+    
+    setLogicSummary(defaultPresets[logicType as keyof typeof defaultPresets] || defaultPresets['PM']);
+  };
+
+  const handleClear = () => {
+    // Clear all content
+    setLogicSummary('');
+    // In a real implementation, this would also:
+    // 1. Clear nodes and edges from the store
+    // 2. Reset the canvas
+    // 3. Reset zoom/pan state
+    console.log('Clearing all content');
+  };
+
   return (
     <div className="h-screen flex flex-col bg-background">
       {/* Status Bar */}
@@ -126,19 +183,19 @@ export default function App() {
                   />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Button variant="secondary" size="sm" className="w-full justify-start">
+                  <Button variant="secondary" size="sm" className="w-full justify-start" onClick={handleGenerateLogic}>
                     <Sparkles className="w-4 h-4 mr-2" />
                     Generate logic
                   </Button>
-                  <Button variant="secondary" size="sm" className="w-full justify-start">
+                  <Button variant="secondary" size="sm" className="w-full justify-start" onClick={handleSample}>
                     <TestTube className="w-4 h-4 mr-2" />
                     Sample
                   </Button>
-                  <Button variant="secondary" size="sm" className="w-full justify-start">
+                  <Button variant="secondary" size="sm" className="w-full justify-start" onClick={handleSyncToText}>
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Sync to text
                   </Button>
-                  <Button variant="secondary" size="sm" className="w-full justify-start">
+                  <Button variant="secondary" size="sm" className="w-full justify-start" onClick={handleClear}>
                     <Trash2 className="w-4 h-4 mr-2" />
                     Clear
                   </Button>
