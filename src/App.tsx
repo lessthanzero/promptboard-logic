@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from './components/ui/input';
 import { Label } from './components/ui/label';
 import { FileJson, FileText, FileDown, Copy, Check, Sparkles, TestTube, Trash2, RefreshCw, Key, Play } from 'lucide-react';
+import LogicNode from './components/LogicNode';
+import mockData from '../mocks/ai-responses.json';
 
 export default function App() {
   const [logicType, setLogicType] = useState('PM');
@@ -21,28 +23,13 @@ export default function App() {
   const [apiDialogOpen, setApiDialogOpen] = useState(false);
   const [apiKey, setApiKey] = useState('');
 
+  // Use the first mock data scenario
+  const currentScenario = mockData.samplePrompts[0];
   const logicStructure = {
-    nodes: [
-      {
-        id: 'c1',
-        type: 'condition',
-        label: 'dfdsfdsfsdfsdfsdf',
-        position: { x: 100, y: 100 }
-      },
-      {
-        id: 'a1',
-        type: 'action',
-        label: 'dfsfds',
-        position: { x: 50, y: 200 }
-      },
-      {
-        id: 'o1',
-        type: 'outcome',
-        label: 'Reduced confusion',
-        position: { x: 50, y: 300 }
-      }
-    ]
+    nodes: currentScenario.nodes,
+    edges: currentScenario.edges
   };
+
 
   const handleCopy = () => {
     navigator.clipboard.writeText(JSON.stringify(logicStructure, null, 2));
@@ -161,72 +148,85 @@ export default function App() {
                 }}
               />
               
-              {/* Logic Flow Visualization */}
-              <div className="relative h-full flex items-center justify-center">
-                <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
-                  {/* Noodle connectors */}
-                  {/* Yes path from Condition to Action */}
-                  <path
-                    d="M 500 180 C 500 220, 440 220, 440 260"
-                    fill="none"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth="2.5"
-                  />
-                  {/* No path from Condition (going right) */}
-                  <path
-                    d="M 560 160 C 620 160, 620 220, 620 280"
-                    fill="none"
-                    stroke="hsl(var(--muted-foreground))"
-                    strokeWidth="2.5"
-                    strokeDasharray="5,5"
-                  />
-                  {/* Path from Action to Outcome */}
-                  <path
-                    d="M 440 315 C 440 350, 480 350, 480 380"
-                    fill="none"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth="2.5"
-                  />
-                </svg>
+                  {/* Logic Flow Visualization */}
+                  <div className="relative h-full flex items-center justify-center">
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
+                      {/* Dynamic connection lines based on mock data */}
+                      {logicStructure.edges?.map((edge) => {
+                        const sourceNode = logicStructure.nodes.find(n => n.id === edge.source);
+                        const targetNode = logicStructure.nodes.find(n => n.id === edge.target);
+                        
+                        if (!sourceNode || !targetNode) return null;
+                        
+                        // Calculate connection points (center of cards) with scaled positions
+                        const sourceX = (sourceNode.position.x * 3) + 112; // Half of card width (224px)
+                        const sourceY = (sourceNode.position.y * 2) + 40; // Half of card height (80px)
+                        const targetX = (targetNode.position.x * 3) + 112;
+                        const targetY = (targetNode.position.y * 2) + 40;
+                        
+                        return (
+                          <g key={edge.id}>
+                            {/* Connection line */}
+                            <line
+                              x1={sourceX}
+                              y1={sourceY}
+                              x2={targetX}
+                              y2={targetY}
+                              stroke={edge.label === 'no' ? "#6b7280" : "#3b82f6"}
+                              strokeWidth="3"
+                              strokeDasharray={edge.label === 'no' ? "5,5" : "none"}
+                            />
+                            
+                            {/* Connection circles at endpoints */}
+                            <circle
+                              cx={sourceX}
+                              cy={sourceY}
+                              r="6"
+                              fill={edge.label === 'no' ? "#6b7280" : "#3b82f6"}
+                            />
+                            <circle
+                              cx={targetX}
+                              cy={targetY}
+                              r="6"
+                              fill={edge.label === 'no' ? "#6b7280" : "#3b82f6"}
+                            />
+                            
+                            {/* Label */}
+                            {edge.label && (
+                              <text
+                                x={(sourceX + targetX) / 2}
+                                y={(sourceY + targetY) / 2 - 10}
+                                textAnchor="middle"
+                                fill={edge.label === 'no' ? "#6b7280" : "#3b82f6"}
+                                fontSize="12"
+                              >
+                                {edge.label}
+                              </text>
+                            )}
+                          </g>
+                        );
+                      })}
+                    </svg>
 
-                {/* Condition Node */}
-                <div className="absolute" style={{ top: '120px', left: '420px', zIndex: 2 }}>
-                  <Card className="w-56 shadow-lg">
-                    <CardContent className="p-3">
-                      <Badge variant="outline" className="mb-2">condition</Badge>
-                      <p className="text-sm text-left">dfdsfdsfsdfsdfsdf</p>
-                    </CardContent>
-                  </Card>
-                  {/* Labels for connectors */}
-                  <div className="absolute" style={{ top: '50px', left: '-30px' }}>
-                    <span className="text-xs text-primary">yes</span>
+                    {/* Render logic nodes */}
+                    {logicStructure.nodes.map((node) => {
+                      // Scale up positions to prevent overlapping
+                      const scaledPosition = {
+                        x: node.position.x * 3, // Scale horizontally
+                        y: node.position.y * 2  // Scale vertically
+                      };
+                      
+                      return (
+                        <LogicNode
+                          key={node.id}
+                          id={node.id}
+                          type={node.type as 'condition' | 'action' | 'outcome'}
+                          label={node.label}
+                          position={scaledPosition}
+                        />
+                      );
+                    })}
                   </div>
-                  <div className="absolute" style={{ top: '30px', right: '-30px' }}>
-                    <span className="text-xs text-muted-foreground">no</span>
-                  </div>
-                </div>
-
-                {/* Action Node */}
-                <div className="absolute" style={{ top: '260px', left: '360px', zIndex: 2 }}>
-                  <Card className="w-40 shadow-lg border-2">
-                    <CardContent className="p-3">
-                      <Badge variant="secondary" className="mb-2">action</Badge>
-                      <p className="text-sm text-left">dfsfds</p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Outcome Node */}
-                <div className="absolute" style={{ top: '380px', left: '360px', zIndex: 2 }}>
-                  <Card className="w-64 shadow-lg bg-primary/5">
-                    <CardContent className="p-3">
-                      <Badge variant="default" className="mb-2">outcome</Badge>
-                      <p className="text-sm text-left">Reduced confusion</p>
-                      <p className="text-xs text-muted-foreground mt-1 text-left">Stopping flow</p>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
             </div>
           </ResizablePanel>
 
