@@ -9,7 +9,7 @@ import { Badge } from './components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './components/ui/dialog';
 import { Input } from './components/ui/input';
 import { Label } from './components/ui/label';
-import { FileJson, FileText, FileDown, Copy, Check, Sparkles, TestTube, Trash2, RefreshCw, Key, Play } from 'lucide-react';
+import { FileJson, FileText, FileDown, Copy, Check, Sparkles, TestTube, Trash2, RefreshCw, Key, Play, X, ArrowLeft, ArrowRight } from 'lucide-react';
 import LogicNode from './components/LogicNode';
 import ZoomControls from './components/ZoomControls';
 import { useWorkspaceNavigation } from './hooks/useWorkspaceNavigation';
@@ -47,6 +47,22 @@ export default function App() {
     nodes: currentScenario.nodes,
     edges: currentScenario.edges
   };
+
+  // Execution flow state
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [currentStep, setCurrentStep] = useState<{
+    type: 'condition' | 'action' | 'outcome';
+    id: string;
+    content: string;
+    badge: string;
+  } | null>(null);
+  const [executionHistory, setExecutionHistory] = useState<Array<{
+    type: 'condition' | 'action' | 'outcome';
+    id: string;
+    content: string;
+    badge: string;
+  }>>([]);
+  const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
 
 
   const handleCopy = () => {
@@ -125,6 +141,114 @@ export default function App() {
     console.log('Clearing all content');
   };
 
+  // Execution flow handlers
+  const handleExecute = () => {
+    // Find the first condition node
+    const firstCondition = logicStructure.nodes.find(node => node.type === 'condition');
+    if (!firstCondition) return;
+
+    const step = {
+      type: firstCondition.type as 'condition' | 'action' | 'outcome',
+      id: firstCondition.id,
+      content: firstCondition.label,
+      badge: firstCondition.type
+    };
+
+    setIsExecuting(true);
+    setCurrentStep(step);
+    setExecutionHistory([step]);
+    setCurrentHistoryIndex(0);
+  };
+
+  const addStepToHistory = (step: typeof currentStep) => {
+    if (!step) return;
+    
+    // Truncate future history after current index
+    const newHistory = executionHistory.slice(0, currentHistoryIndex + 1);
+    newHistory.push(step);
+    
+    setExecutionHistory(newHistory);
+    setCurrentHistoryIndex(newHistory.length - 1);
+    setCurrentStep(step);
+  };
+
+  const handleConditionResponse = (response: 'yes' | 'no') => {
+    if (response === 'no') {
+      // End execution
+      handleStopExecution();
+      return;
+    }
+
+    // Find the connected action node
+    const currentCondition = logicStructure.nodes.find(node => node.id === currentStep?.id);
+    if (!currentCondition) return;
+
+    const connectedEdge = logicStructure.edges?.find(edge => 
+      edge.source === currentCondition.id && edge.label === 'yes'
+    );
+    
+    if (!connectedEdge) return;
+
+    const actionNode = logicStructure.nodes.find(node => node.id === connectedEdge.target);
+    if (!actionNode) return;
+
+    const step = {
+      type: actionNode.type as 'condition' | 'action' | 'outcome',
+      id: actionNode.id,
+      content: actionNode.label,
+      badge: actionNode.type
+    };
+
+    addStepToHistory(step);
+  };
+
+  const handleActionDone = () => {
+    // Find the connected outcome node
+    const currentAction = logicStructure.nodes.find(node => node.id === currentStep?.id);
+    if (!currentAction) return;
+
+    const connectedEdge = logicStructure.edges?.find(edge => 
+      edge.source === currentAction.id
+    );
+    
+    if (!connectedEdge) return;
+
+    const outcomeNode = logicStructure.nodes.find(node => node.id === connectedEdge.target);
+    if (!outcomeNode) return;
+
+    const step = {
+      type: outcomeNode.type as 'condition' | 'action' | 'outcome',
+      id: outcomeNode.id,
+      content: outcomeNode.label,
+      badge: outcomeNode.type
+    };
+
+    addStepToHistory(step);
+  };
+
+  const handleBackward = () => {
+    if (currentHistoryIndex > 0) {
+      const newIndex = currentHistoryIndex - 1;
+      setCurrentHistoryIndex(newIndex);
+      setCurrentStep(executionHistory[newIndex]);
+    }
+  };
+
+  const handleForward = () => {
+    if (currentHistoryIndex < executionHistory.length - 1) {
+      const newIndex = currentHistoryIndex + 1;
+      setCurrentHistoryIndex(newIndex);
+      setCurrentStep(executionHistory[newIndex]);
+    }
+  };
+
+  const handleStopExecution = () => {
+    setIsExecuting(false);
+    setCurrentStep(null);
+    setExecutionHistory([]);
+    setCurrentHistoryIndex(-1);
+  };
+
   return (
     <div className="h-screen flex flex-col bg-background">
       {/* Status Bar */}
@@ -151,7 +275,7 @@ export default function App() {
             <FileDown className="w-4 h-4 mr-1" />
             PDF
           </Button>
-          <Button className="bg-purple-600 hover:bg-purple-700 text-white" size="sm">
+          <Button className="bg-purple-600 hover:bg-purple-700 text-white" size="sm" onClick={handleExecute}>
             <Play className="w-4 h-4 mr-1" />
             Execute
           </Button>
@@ -427,6 +551,111 @@ export default function App() {
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
+
+      {/* Execution Flow Overlay */}
+      {isExecuting && currentStep && (
+        <div className="fixed inset-0 z-50" style={{ backgroundColor: 'rgba(156, 163, 175, 0.8)' }}>
+          {/* Stop Button */}
+          <button
+            className="absolute top-4 right-4 border border-gray-300 bg-white hover:bg-gray-50 flex items-center justify-center"
+            style={{ 
+              width: '32px', 
+              height: '32px', 
+              borderRadius: '50%' 
+            }}
+            onClick={handleStopExecution}
+          >
+            <X className="w-4 h-4 text-gray-600" />
+          </button>
+
+          {/* Navigation Arrows - Top Right Area */}
+          <div className="absolute top-4 flex gap-2" style={{ left: '24px' }}>
+            <button
+              className="border border-gray-300 bg-white hover:bg-gray-50 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ 
+                width: '32px', 
+                height: '32px', 
+                borderRadius: '50%' 
+              }}
+              onClick={handleBackward}
+              disabled={currentHistoryIndex <= 0}
+            >
+              <ArrowLeft className="w-4 h-4 text-gray-600" />
+            </button>
+            <button
+              className="border border-gray-300 bg-white hover:bg-gray-50 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ 
+                width: '32px', 
+                height: '32px', 
+                borderRadius: '50%' 
+              }}
+              onClick={handleForward}
+              disabled={currentHistoryIndex >= executionHistory.length - 1}
+            >
+              <ArrowRight className="w-4 h-4 text-gray-600" />
+            </button>
+          </div>
+
+          {/* Execution Card - Centered */}
+          <div className="flex items-center justify-center h-full">
+            <div style={{ transform: 'scale(1.5)' }}>
+              <Card className="w-64 shadow-2xl">
+                <CardContent className="p-6">
+                  <Badge 
+                    variant={
+                      currentStep.type === 'condition' ? 'outline' :
+                      currentStep.type === 'action' ? 'secondary' : 'default'
+                    }
+                    style={{ marginBottom: '20px' }}
+                  >
+                    {currentStep.badge}
+                  </Badge>
+                  
+                  <p className="text-sm" style={{ marginBottom: '20px' }}>{currentStep.content}</p>
+                  
+                  {currentStep.type === 'condition' && (
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        onClick={() => handleConditionResponse('yes')}
+                        className="flex-1"
+                      >
+                        Yes
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleConditionResponse('no')}
+                        className="flex-1"
+                      >
+                        No
+                      </Button>
+                    </div>
+                  )}
+                  
+                      {currentStep.type === 'action' && (
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          onClick={handleActionDone}
+                          className="w-full"
+                          style={{ marginTop: '20px' }}
+                        >
+                          Done
+                        </Button>
+                      )}
+                      
+                      {currentStep.type === 'outcome' && (
+                        <p className="text-xs text-muted-foreground" style={{ marginTop: '20px' }}>Stopping flow</p>
+                      )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+        </div>
+      )}
 
       {/* API Dialog */}
       <Dialog open={apiDialogOpen} onOpenChange={setApiDialogOpen}>
