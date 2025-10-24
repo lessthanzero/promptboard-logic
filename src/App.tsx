@@ -40,8 +40,9 @@ export default function App() {
     getTransform
   } = useWorkspaceNavigation();
 
-  // Use the first mock data scenario
-  const currentScenario = mockData.samplePrompts[0];
+  // Dynamic logic structure state
+  const [currentScenarioIndex, setCurrentScenarioIndex] = useState(0);
+  const currentScenario = mockData.samplePrompts[currentScenarioIndex];
   const logicStructure = {
     nodes: currentScenario.nodes,
     edges: currentScenario.edges
@@ -75,14 +76,13 @@ export default function App() {
     const scenarioIndex = personaMap[logicType as keyof typeof personaMap] || 0;
     const scenario = mockData.samplePrompts[scenarioIndex];
     
-    // Update the logic structure with the selected scenario
-    // This would normally update the store, but for now we'll just log
-    console.log('Generating logic for:', logicType, scenario);
+    // Update the current scenario index to change the diagram
+    setCurrentScenarioIndex(scenarioIndex);
     
-    // In a real implementation, this would:
-    // 1. Update the nodes and edges in the store
-    // 2. Trigger a re-render of the canvas
-    // 3. Show loading state
+    // Also update the logic summary to match the selected scenario
+    setLogicSummary(scenario.prompt);
+    
+    console.log('Generated logic for:', logicType, 'Scenario:', scenario.id);
   };
 
   const handleSample = () => {
@@ -97,6 +97,9 @@ export default function App() {
     
     // Load the prompt text into Logic summary
     setLogicSummary(scenario.prompt);
+    
+    // Also update the diagram to match the sample
+    setCurrentScenarioIndex(scenarioIndex);
   };
 
   const handleSyncToText = () => {
@@ -113,6 +116,8 @@ export default function App() {
   const handleClear = () => {
     // Clear all content
     setLogicSummary('');
+    // Reset to the first scenario (onboarding-skip)
+    setCurrentScenarioIndex(0);
     // In a real implementation, this would also:
     // 1. Clear nodes and edges from the store
     // 2. Reset the canvas
