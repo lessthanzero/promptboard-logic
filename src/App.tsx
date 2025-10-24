@@ -11,6 +11,8 @@ import { Input } from './components/ui/input';
 import { Label } from './components/ui/label';
 import { FileJson, FileText, FileDown, Copy, Check, Sparkles, TestTube, Trash2, RefreshCw, Key, Play } from 'lucide-react';
 import LogicNode from './components/LogicNode';
+import ZoomControls from './components/ZoomControls';
+import { useWorkspaceNavigation } from './hooks/useWorkspaceNavigation';
 import mockData from '../mocks/ai-responses.json';
 
 export default function App() {
@@ -22,6 +24,21 @@ export default function App() {
   );
   const [apiDialogOpen, setApiDialogOpen] = useState(false);
   const [apiKey, setApiKey] = useState('');
+
+  // Workspace navigation
+  const {
+    workspaceState,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    zoomToFit,
+    centerOnContent,
+    handleWheel,
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
+    getTransform
+  } = useWorkspaceNavigation();
 
   // Use the first mock data scenario
   const currentScenario = mockData.samplePrompts[0];
@@ -136,96 +153,169 @@ export default function App() {
 
           <ResizableHandle />
 
-          {/* Center Panel - Visual Canvas */}
-          <ResizablePanel defaultSize={50} minSize={30}>
-            <div className="h-full relative bg-muted/20">
-              {/* Canvas Dotted Background */}
-              <div 
-                className="absolute inset-0" 
-                style={{
-                  backgroundImage: `radial-gradient(circle, rgb(156 163 175 / 0.4) 1px, transparent 1px)`,
-                  backgroundSize: '20px 20px'
-                }}
-              />
+              {/* Center Panel - Visual Canvas */}
+              <ResizablePanel defaultSize={50} minSize={30}>
+                <div 
+                  className="h-full relative bg-muted/20 overflow-hidden"
+                  onWheel={handleWheel}
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                  style={{ cursor: 'grab' }}
+                >
+                  {/* Canvas Dotted Background */}
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      backgroundImage: `radial-gradient(circle, rgb(156 163 175 / 0.4) 1px, transparent 1px)`,
+                      backgroundSize: '20px 20px',
+                      backgroundPosition: '0 0',
+                      backgroundRepeat: 'repeat',
+                      width: '100%',
+                      height: '100%'
+                    }}
+                  />
+                  
+                  {/* Zoom Controls */}
+                  <ZoomControls
+                    onZoomIn={zoomIn}
+                    onZoomOut={zoomOut}
+                    onResetZoom={resetZoom}
+                    onZoomToFit={() => {
+                      // Calculate content bounds from nodes
+                      const nodes = logicStructure.nodes;
+                      if (nodes.length === 0) return;
+                      
+                      const minX = Math.min(...nodes.map(n => n.position.x * 3));
+                      const maxX = Math.max(...nodes.map(n => (n.position.x * 3) + 224));
+                      const minY = Math.min(...nodes.map(n => n.position.y * 2));
+                      const maxY = Math.max(...nodes.map(n => (n.position.y * 2) + 80));
+                      
+                      const contentBounds = {
+                        x: minX,
+                        y: minY,
+                        width: maxX - minX,
+                        height: maxY - minY
+                      };
+                      
+                      zoomToFit(800, 600, contentBounds); // Approximate panel size
+                    }}
+                    onCenterContent={() => {
+                      const nodes = logicStructure.nodes;
+                      if (nodes.length === 0) return;
+                      
+                      const minX = Math.min(...nodes.map(n => n.position.x * 3));
+                      const maxX = Math.max(...nodes.map(n => (n.position.x * 3) + 224));
+                      const minY = Math.min(...nodes.map(n => n.position.y * 2));
+                      const maxY = Math.max(...nodes.map(n => (n.position.y * 2) + 80));
+                      
+                      const contentBounds = {
+                        x: minX,
+                        y: minY,
+                        width: maxX - minX,
+                        height: maxY - minY
+                      };
+                      
+                      centerOnContent(800, 600, contentBounds);
+                    }}
+                    currentZoom={workspaceState.zoom}
+                  />
               
                   {/* Logic Flow Visualization */}
                   <div className="relative h-full flex items-center justify-center">
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
-                      {/* Dynamic connection lines based on mock data */}
-                      {logicStructure.edges?.map((edge) => {
-                        const sourceNode = logicStructure.nodes.find(n => n.id === edge.source);
-                        const targetNode = logicStructure.nodes.find(n => n.id === edge.target);
-                        
-                        if (!sourceNode || !targetNode) return null;
-                        
-                        // Calculate connection points (center of cards) with scaled positions
-                        const sourceX = (sourceNode.position.x * 3) + 112; // Half of card width (224px)
-                        const sourceY = (sourceNode.position.y * 2) + 40; // Half of card height (80px)
-                        const targetX = (targetNode.position.x * 3) + 112;
-                        const targetY = (targetNode.position.y * 2) + 40;
+                    {/* Single container with transform applied to both SVG and nodes */}
+                    <div 
+                      style={{ 
+                        transform: getTransform(),
+                        transformOrigin: '0 0',
+                        position: 'relative',
+                        width: '100%',
+                        height: '100%'
+                      }}
+                    >
+                      <svg 
+                        className="absolute inset-0 w-full h-full pointer-events-none" 
+                        style={{ 
+                          zIndex: 1
+                        }}
+                      >
+                        {/* Dynamic connection lines based on mock data */}
+                        {logicStructure.edges?.map((edge) => {
+                          const sourceNode = logicStructure.nodes.find(n => n.id === edge.source);
+                          const targetNode = logicStructure.nodes.find(n => n.id === edge.target);
+                          
+                          if (!sourceNode || !targetNode) return null;
+                          
+                          // Calculate connection points (center of cards) with scaled positions
+                          const sourceX = (sourceNode.position.x * 3) + 112; // Half of card width (224px)
+                          const sourceY = (sourceNode.position.y * 2) + 40; // Half of card height (80px)
+                          const targetX = (targetNode.position.x * 3) + 112;
+                          const targetY = (targetNode.position.y * 2) + 40;
+                          
+                          return (
+                            <g key={edge.id}>
+                              {/* Connection line */}
+                              <line
+                                x1={sourceX}
+                                y1={sourceY}
+                                x2={targetX}
+                                y2={targetY}
+                                stroke={edge.label === 'no' ? "#6b7280" : "#3b82f6"}
+                                strokeWidth="3"
+                                strokeDasharray={edge.label === 'no' ? "5,5" : "none"}
+                              />
+                              
+                              {/* Connection circles at endpoints */}
+                              <circle
+                                cx={sourceX}
+                                cy={sourceY}
+                                r="6"
+                                fill={edge.label === 'no' ? "#6b7280" : "#3b82f6"}
+                              />
+                              <circle
+                                cx={targetX}
+                                cy={targetY}
+                                r="6"
+                                fill={edge.label === 'no' ? "#6b7280" : "#3b82f6"}
+                              />
+                              
+                              {/* Label */}
+                              {edge.label && (
+                                <text
+                                  x={(sourceX + targetX) / 2}
+                                  y={(sourceY + targetY) / 2 - 10}
+                                  textAnchor="middle"
+                                  fill={edge.label === 'no' ? "#6b7280" : "#3b82f6"}
+                                  fontSize="12"
+                                >
+                                  {edge.label}
+                                </text>
+                              )}
+                            </g>
+                          );
+                        })}
+                      </svg>
+
+                      {/* Render logic nodes */}
+                      {logicStructure.nodes.map((node) => {
+                        // Scale up positions to prevent overlapping
+                        const scaledPosition = {
+                          x: node.position.x * 3, // Scale horizontally
+                          y: node.position.y * 2  // Scale vertically
+                        };
                         
                         return (
-                          <g key={edge.id}>
-                            {/* Connection line */}
-                            <line
-                              x1={sourceX}
-                              y1={sourceY}
-                              x2={targetX}
-                              y2={targetY}
-                              stroke={edge.label === 'no' ? "#6b7280" : "#3b82f6"}
-                              strokeWidth="3"
-                              strokeDasharray={edge.label === 'no' ? "5,5" : "none"}
-                            />
-                            
-                            {/* Connection circles at endpoints */}
-                            <circle
-                              cx={sourceX}
-                              cy={sourceY}
-                              r="6"
-                              fill={edge.label === 'no' ? "#6b7280" : "#3b82f6"}
-                            />
-                            <circle
-                              cx={targetX}
-                              cy={targetY}
-                              r="6"
-                              fill={edge.label === 'no' ? "#6b7280" : "#3b82f6"}
-                            />
-                            
-                            {/* Label */}
-                            {edge.label && (
-                              <text
-                                x={(sourceX + targetX) / 2}
-                                y={(sourceY + targetY) / 2 - 10}
-                                textAnchor="middle"
-                                fill={edge.label === 'no' ? "#6b7280" : "#3b82f6"}
-                                fontSize="12"
-                              >
-                                {edge.label}
-                              </text>
-                            )}
-                          </g>
+                          <LogicNode
+                            key={node.id}
+                            id={node.id}
+                            type={node.type as 'condition' | 'action' | 'outcome'}
+                            label={node.label}
+                            position={scaledPosition}
+                          />
                         );
                       })}
-                    </svg>
-
-                    {/* Render logic nodes */}
-                    {logicStructure.nodes.map((node) => {
-                      // Scale up positions to prevent overlapping
-                      const scaledPosition = {
-                        x: node.position.x * 3, // Scale horizontally
-                        y: node.position.y * 2  // Scale vertically
-                      };
-                      
-                      return (
-                        <LogicNode
-                          key={node.id}
-                          id={node.id}
-                          type={node.type as 'condition' | 'action' | 'outcome'}
-                          label={node.label}
-                          position={scaledPosition}
-                        />
-                      );
-                    })}
+                    </div>
                   </div>
             </div>
           </ResizablePanel>
