@@ -325,15 +325,6 @@ export default function App() {
             <FileDown className="w-4 h-4 mr-1" />
             PDF
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setSettingsDialogOpen(true)}
-            className="flex items-center gap-1"
-          >
-            <Settings className="w-4 h-4" />
-            Settings
-          </Button>
           <Button className="bg-purple-600 hover:bg-purple-700 text-white" size="sm" onClick={handleExecute}>
             <Play className="w-4 h-4 mr-1" />
             Execute
@@ -393,9 +384,9 @@ export default function App() {
                     <Trash2 className="w-4 h-4 mr-2" />
                     Clear
                   </Button>
-                  <Button variant="secondary" size="sm" className="w-full justify-start" onClick={() => setApiDialogOpen(true)}>
-                    <Key className="w-4 h-4 mr-2" />
-                    Set API
+                  <Button variant="secondary" size="sm" className="w-full justify-start" onClick={() => setSettingsDialogOpen(true)}>
+                    <Settings className="w-4 h-4 mr-2" />
+                    Settings
                   </Button>
                 </div>
               </CardContent>
