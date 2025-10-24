@@ -1,6 +1,6 @@
 # PromptBoard Development TODO
 
-## 🎯 Current Sprint: Day 1 Complete ✅
+## 🎯 Current Sprint: MVP Complete ✅
 
 ### Day 1 - Environment & Setup ✅
 - [x] Create Vite + React + TypeScript + Tailwind project
@@ -26,13 +26,13 @@
 - [x] Add non-PM/Researcher mock scenario (job salary decision)
 - [x] Design executable wireframes concept for future implementation
 
-### Day 4 - React Flow Canvas & Core Nodes
-- [ ] Implement Zustand store with localStorage persistence
-- [ ] Create 3 custom node components (Condition, Action, Outcome)
-- [ ] Build 3-column layout (PromptPanel, CanvasArea, Sidebar)
-- [ ] Add JSON View tab to sidebar
-- [ ] Implement loading states and error boundaries
-- [ ] Connect React Flow to Zustand store
+### Day 4 - React Flow Canvas & Core Nodes ✅
+- [x] Implement Zustand store with localStorage persistence
+- [x] Create 3 custom node components (Condition, Action, Outcome)
+- [x] Build 3-column layout (PromptPanel, CanvasArea, Sidebar)
+- [x] Add JSON View tab to sidebar
+- [x] Implement loading states and error boundaries
+- [x] Connect React Flow to Zustand store
 
 ### Day 5 - AI Integration, Assistant Panel, Sync & Export ✅
 - [x] Create /lib/ai.ts with mock + real API structure
@@ -46,7 +46,7 @@
 
 ## 🎨 UI/UX Improvements - Post-MVP
 
-### Phase 1: Immediate Polish (Week 1)
+### Phase 1: Immediate Polish (Week 1) ✅
 - [x] **Dark Mode Toggle**
   - [x] Theme context provider
   - [x] CSS variables for light/dark themes
@@ -82,6 +82,31 @@
   - [x] Minimum/maximum width constraints
   - [x] Persist panel sizes in localStorage
   - [x] Smooth resize animations
+- [x] **Connection Lines & Node Icons**
+  - [x] Draw connection lines between cards based on mock data logic
+  - [x] Ensure connections update correctly with layout changes
+  - [x] Add shadcn icons in type badge (QuestionMark, Zap, Target)
+  - [x] Fix card overlapping issues
+- [x] **Workspace Navigation**
+  - [x] Add zoom in/out controls
+  - [x] Add zoom to fit functionality
+  - [x] Add center on content feature
+  - [x] Add basic draggability of workspace
+  - [x] Fix dotted background tiling across workspace
+- [x] **Button Functionality**
+  - [x] Implement mock functionality for "Generate logic" button
+  - [x] Implement "Sample" button to load text preset
+  - [x] Implement "Sync to text" button to reset logic summary
+  - [x] Implement "Clear" button to clear all
+- [x] **Execution Flow**
+  - [x] Add execution flow overlay with 75% white fill
+  - [x] Implement logical cards rendered one by one at 1.5x scale
+  - [x] Add condition card with "Yes" and "No" buttons
+  - [x] Add action card with "Done" button
+  - [x] Add outcome card completion
+  - [x] Add close/stop button in top-right corner
+  - [x] Add forward and backward navigation arrows
+  - [x] Implement flow logic following JSON mock data structure
 
 ### Phase 2: Advanced Interactions (Week 2-3)
 - [ ] **Toast System Migration**

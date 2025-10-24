@@ -1,5 +1,11 @@
 {
   "env": { "VITE_USE_REAL_AI": "false" },
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "develop": false
+    }
+  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "https://your-railway-backend.app/api/$1" }
   ]
